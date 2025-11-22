@@ -1,0 +1,47 @@
+{
+  "categories": {
+    "core": {
+      "enabled": true,
+      "commands": {
+        "ping": {
+          "enabled": true,
+          "aliases": [
+            "pi",
+            "latency"
+          ],
+          "cooldown": 10
+        }
+      }
+    },
+    "moderation": {
+      "enabled": true,
+      "commands": {
+        "ban": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0
+        }
+      }
+    },
+    "utility": {
+      "enabled": true,
+      "commands": {
+        "search": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0
+        },
+        "avatar": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0
+        },
+        "info": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0
+        }
+      }
+    }
+  }
+}

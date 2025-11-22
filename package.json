@@ -1,0 +1,36 @@
+{
+  "name": "avinex",
+  "version": "1.0.0",
+  "description": "A hybrid Discord bot using Sapphire and a custom command converter",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "nodemon",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "reset-commands": "ts-node src/scripts/reset-commands.ts",
+    "rs": "npm run reset-commands",
+    "sync-config": "ts-node src/scripts/sync-config.ts",
+    "sc": "npm run sync-config",
+    "refresh": "npm run reset-commands && npm run sync-config",
+    "rf": "npm run refresh"
+  },
+  "dependencies": {
+    "@sapphire/framework": "^5.0.0",
+    "@sapphire/pieces": "^4.0.0",
+    "@sapphire/utilities": "^3.13.0",
+    "boxen": "^7.1.1",
+    "chalk": "^4.1.2",
+    "discord.js": "^14.14.0",
+    "dotenv": "^16.3.1",
+    "winston": "^3.18.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.2"
+  },
+  "engines": {
+    "node": ">=16.9.0"
+  }
+}
