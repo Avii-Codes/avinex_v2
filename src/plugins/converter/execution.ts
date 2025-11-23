@@ -193,7 +193,12 @@ export async function executeHybridCommand(
         setTimeout(() => {
             // Double check flags to avoid "Interaction already acknowledged"
             if (!trigger.replied && !trigger.deferred) {
-                trigger.deferReply().catch(e => log.error('Failed to auto-defer', e));
+                trigger.deferReply().catch(e => {
+                    // Ignore "Unknown interaction" (10062) and "Interaction already acknowledged" (40060)
+                    if (e.code !== 10062 && e.code !== 40060) {
+                        log.error('Failed to auto-defer', e);
+                    }
+                });
             }
         }, 250);
     }

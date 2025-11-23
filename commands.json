@@ -45,6 +45,12 @@
           "aliases": [],
           "cooldown": 0,
           "fingerprint": "1dc0f53599a9a72fbf398465a7da8501"
+        },
+        "say": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "54dbbea338fec9ad5540e3726b3e91a7"
         }
       }
     }
