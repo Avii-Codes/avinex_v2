@@ -9,3 +9,4 @@ const command = {
     }
 };
 exports.default = command;
+//# sourceMappingURL=ping.js.map

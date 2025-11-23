@@ -17,3 +17,4 @@ const command = {
     }
 };
 exports.default = command;
+//# sourceMappingURL=avatar.js.map

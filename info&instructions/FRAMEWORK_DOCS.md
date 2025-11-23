@@ -143,3 +143,157 @@ The framework enforces strict rules at startup to prevent runtime crashes:
 
 ### Clean Exits
 Validation errors trigger a `process.exit(1)` with a clear error message, avoiding noisy stack traces and making debugging easier.
+
+---
+
+## Best Practices
+
+### Command Design
+1. **Keep Commands Focused**: Each command should do one thing well
+2. **Use Descriptive Names**: Command names should clearly indicate their purpose
+3. **Leverage Args Grammar**: Define clear argument expectations upfront
+4. **Provide Helpful Descriptions**: Make slash commands self-documenting
+
+### Error Handling
+```typescript
+async run(ctx) {
+  try {
+    // Command logic
+    await ctx.reply('Success!');
+  } catch (error) {
+    // Log the error
+    console.error('Command error:', error);
+    // User-friendly message
+    await ctx.reply('❌ Something went wrong. Please try again.');
+  }
+}
+```
+
+### Permission Management
+- Use `level` for role-based access (User, Admin, ServerOwner, Developer)
+- Use `permissions` for Discord-specific permissions (BanMembers, ManageMessages)
+- Combine both for granular control
+
+### Configuration
+- Set sensible defaults in code
+- Override via `commands.json` for runtime changes
+- Document configuration options in command comments
+
+---
+
+## Performance Considerations
+
+### Registry Caching
+The Registry loads all commands once at startup and caches them in memory. Command lookups are O(1) operations using Map data structures.
+
+### Cooldown System
+- Uses `performance.now()` (high-resolution monotonic timer)
+- In-memory Map for fast lookups
+- Automatically cleans up expired entries
+
+### Auto-Deferral Timing
+The 250ms threshold for auto-deferral is carefully chosen:
+- Too short: Unnecessary deferrals for fast commands
+- Too long: Risk of interaction timeout (3 seconds)
+- 250ms provides optimal balance
+
+### Argument Parsing
+The custom lexer is optimized for common cases:
+- Simple tokens: O(n) single pass
+- Quoted strings: Minimal allocations
+- Unicode aware but efficient
+
+---
+
+## Testing Strategies
+
+### Framework Verification
+Use the built-in verification script:
+```bash
+npm run verify
+```
+
+This tests:
+- Permission system
+- Prefix command parsing
+- Programmatic execution
+- Error handling
+
+### Manual Testing Checklist
+- ✅ Test both slash and prefix versions
+- ✅ Test with and without arguments
+- ✅ Test permission levels
+- ✅ Test cooldowns
+- ✅ Test error cases (invalid args, missing permissions)
+- ✅ Test in DMs vs server channels
+
+### Integration Testing
+For custom commands, create test scripts:
+```typescript
+import { executeCommand } from './plugins/converter/register';
+
+// Test command execution
+await executeCommand(
+  client,
+  testUser,
+  testChannel,
+  'commandName',
+  { arg1: 'value1' }
+);
+```
+
+---
+
+## Migration Guide
+
+### From v5.0.0 to v5.4.0
+
+The Sapphire Framework update from 5.0.0 to 5.4.0 is backward compatible. No code changes required.
+
+**What's New:**
+- Performance improvements
+- Bug fixes
+- Enhanced TypeScript types
+
+### Updating Dependencies
+
+1. Backup your project
+2. Update `package.json` (or use the provided updated version)
+3. Run `npm install`
+4. Test your commands
+5. Deploy
+
+---
+
+## Deployment Considerations
+
+### Environment Variables
+Always use `.env` files. Never commit secrets to version control.
+
+Required variables:
+- `DISCORD_TOKEN` - Your bot token
+- `PREFIX` - Command prefix (default: `!`)
+- `OWNER_IDS` - Comma-separated list of owner Discord IDs
+
+Optional:
+- `DEV_MODE` - Set to `true` for verbose logging
+
+### Production Checklist
+- [ ] Set `DEV_MODE=false`
+- [ ] Use process manager (PM2, systemd)
+- [ ] Set up logging aggregation
+- [ ] Monitor memory usage
+- [ ] Enable automatic restarts
+- [ ] Set up health checks
+- [ ] Configure rate limiting if needed
+
+### Recommended Process Manager Setup (PM2)
+```bash
+pm2 start dist/index.js --name "discord-bot"
+pm2 save
+pm2 startup
+```
+
+---
+
+**For questions or contributions, please refer to the project's issue tracker.**

@@ -2,9 +2,21 @@
 
 A powerful Discord bot template featuring a **Hybrid Command System** (Slash + Prefix), **Dynamic Configuration**, and **Hierarchical Permissions**.
 
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Node](https://img.shields.io/badge/node-%3E%3D16.9.0-green)
+![Discord.js](https://img.shields.io/badge/discord.js-14.16.3-5865F2)
+![Sapphire](https://img.shields.io/badge/sapphire-5.4.0-7289DA)
+
 > [!TIP]
 > **New to the framework?**
 > Check out [FRAMEWORK_DOCS.md](FRAMEWORK_DOCS.md) for a deep dive into how everything works under the hood!
+
+## 📋 Requirements
+
+- **Node.js**: v16.9.0 or higher (v18+ recommended)
+- **npm**: v7.0.0 or higher
+- **Discord Bot Token**: [Create one here](https://discord.com/developers/applications)
+- **TypeScript**: Included as dev dependency
 
 ## 📦 Installation
 
@@ -19,9 +31,13 @@ A powerful Discord bot template featuring a **Hybrid Command System** (Slash + P
     DISCORD_TOKEN=your_bot_token
     PREFIX=!
     OWNER_IDS=123456789,987654321
+    MONGODB_URI=mongodb://localhost:27017/avinex
     ```
 
-3.  **Run Development Mode**:
+3.  **Setup Database**:
+    Ensure you have MongoDB installed and running locally, or use a cloud provider like MongoDB Atlas.
+
+4.  **Run Development Mode**:
     ```bash
     npm run dev
     ```
@@ -128,3 +144,115 @@ hybrid-bot/
 ├── commands.json       # Dynamic config (Auto-generated)
 └── README.md           # This file
 ```
+
+## 🏗 Architecture Overview
+
+The framework uses a **Unified Execution Pipeline** that processes commands identically regardless of their trigger source:
+
+```mermaid
+graph TD
+    A[User Action] --> B{Trigger Type?}
+    B -->|Slash Command| C[Interaction Event]
+    B -->|Prefix Message| D[Message Event]
+    B -->|AI/Code| E[Virtual Trigger]
+    
+    C --> F[executeHybridCommand]
+    D --> F
+    E --> F
+    
+    F --> G[Registry Lookup]
+    G --> H{Command Found?}
+    H -->|No| I[Error Response]
+    H -->|Yes| J[Permission Check]
+    
+    J --> K{Authorized?}
+    K -->|No| L[Permission Error]
+    K -->|Yes| M[Cooldown Check]
+    
+    M --> N{On Cooldown?}
+    N -->|Yes| O[Cooldown Error]
+    N -->|No| P[Parse Arguments]
+    
+    P --> Q[Auto-Defer if Slow]
+    Q --> R[Execute command.run]
+    R --> S[Response Sent]
+```
+
+**Key Components:**
+- **Registry**: Single source of truth for all commands
+- **Execution Engine**: Handles permissions, cooldowns, and auto-deferral
+- **Lexer/Grammar**: Parses prefix command arguments
+- **Config Manager**: Smart configuration with fingerprint tracking
+
+## ⚡ Advanced Features
+
+### Permission Hierarchy
+Four permission levels enforce access control:
+- **User** - Everyone can use
+- **Admin** - Requires `Administrator` permission
+- **ServerOwner** - Only the server owner
+- **Developer** - Bot owners only (configured via `OWNER_IDS`)
+
+### Monotonic Cooldown System
+Uses `performance.now()` instead of `Date.now()` to prevent cooldown bypasses when system time is changed.
+
+### Auto-Deferral Mechanism
+Automatically defers Discord interactions if command execution exceeds 250ms, preventing "Interaction failed" errors.
+
+### Fingerprint-Based Config Tracking
+Each command file has an MD5 fingerprint. When you rename or move a command file, the config system automatically updates instead of creating duplicate entries.
+
+### Collision Detection
+Fatal errors during startup if:
+- Two commands have the same name
+- An alias conflicts with another command or alias
+
+## 🔧 Troubleshooting
+
+### Command not appearing as slash command
+Run the refresh script to sync with Discord:
+```bash
+npm run rf
+```
+
+### "Interaction failed" errors
+The framework auto-defers after 250ms, but if you see this:
+- Check if your command logic has errors
+- Ensure you're using `await` on async operations
+- Look for errors in the console logs
+
+### Commands loading but not executing
+Check the permissions in your command file:
+```typescript
+level: 'Admin',  // Make sure user has admin permissions
+permissions: ['ManageMessages']  // Ensure required Discord permissions
+```
+
+### TypeScript compilation errors after update
+Clear the build directory and rebuild:
+```bash
+rm -rf dist
+npm run build
+```
+
+### Package installation issues
+Delete `node_modules` and `package-lock.json`, then reinstall:
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+## 📚 Additional Resources
+
+- **[FRAMEWORK_DOCS.md](FRAMEWORK_DOCS.md)** - Deep dive into internals
+- **[SYSTEM_DOCS.md](SYSTEM_DOCS.md)** - Main Bot System Architecture & Modules
+- **[Discord.js Guide](https://discordjs.guide/)** - Learn Discord.js basics
+- **[Sapphire Framework Docs](https://www.sapphirejs.dev/)** - Official Sapphire documentation
+
+## 📝 License
+
+This project is provided as-is for educational and development purposes.
+
+---
+
+**Built with ❤️ using Sapphire Framework and Discord.js**

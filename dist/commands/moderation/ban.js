@@ -16,3 +16,4 @@ const command = {
     }
 };
 exports.default = command;
+//# sourceMappingURL=ban.js.map

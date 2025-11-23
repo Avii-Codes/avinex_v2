@@ -19,3 +19,4 @@ const command = {
     }
 };
 exports.default = command;
+//# sourceMappingURL=search.js.map

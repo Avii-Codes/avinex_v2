@@ -9,7 +9,7 @@
             "pi",
             "latency"
           ],
-          "cooldown": 10,
+          "cooldown": 5,
           "fingerprint": "bea574110ab81ac8bcd82ed93f8d9dc4"
         }
       }
@@ -51,6 +51,12 @@
           "aliases": [],
           "cooldown": 0,
           "fingerprint": "54dbbea338fec9ad5540e3726b3e91a7"
+        },
+        "test": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "07e5e615cf63cca0642a6b5f6d2d5bf2"
         }
       }
     }

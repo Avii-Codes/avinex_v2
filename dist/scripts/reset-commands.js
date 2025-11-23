@@ -25,3 +25,4 @@ async function resetCommands() {
     }
 }
 resetCommands();
+//# sourceMappingURL=reset-commands.js.map

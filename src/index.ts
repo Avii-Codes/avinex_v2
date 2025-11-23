@@ -1,23 +1,25 @@
 import 'dotenv/config';
-import { HybridClient } from './client';
-import { displayBanner } from './utils/logger';
+import { ExtendedClient } from './client/ExtendedClient';
+import { displayBanner, log } from './utils/logger';
 
 // Display Avinex banner
 displayBanner();
 
-const client = new HybridClient();
-
-client.login(process.env.DISCORD_TOKEN).catch(err => {
-  console.error('Failed to login:', err);
-});
+const client = new ExtendedClient();
 
 // Graceful Shutdown
 const shutdown = async () => {
-  console.log('\n🛑 Shutting down bot...');
+  log.info('\n🛑 Shutting down bot...');
   await client.destroy();
-  console.log('✅ Bot disconnected. Exiting.');
+  log.success('✅ Bot disconnected. Exiting.');
   process.exit(0);
 };
 
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
+
+// Start the bot
+client.init().catch(err => {
+  log.error('Fatal error during initialization:', err);
+  process.exit(1);
+});

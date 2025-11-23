@@ -46,3 +46,4 @@ function parseGrammar(grammar) {
     }
     return args;
 }
+//# sourceMappingURL=grammar.js.map

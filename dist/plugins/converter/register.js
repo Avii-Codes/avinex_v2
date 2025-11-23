@@ -1,18 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.commands = void 0;
 exports.registerConverterPlugin = registerConverterPlugin;
 const discord_js_1 = require("discord.js");
 const fs_1 = require("fs");
 const path_1 = require("path");
-const context_1 = require("./context");
 const grammar_1 = require("./grammar");
 const config_1 = require("../../utils/config");
 const logger_1 = require("../../utils/logger");
-// Global store for our commands
-exports.commands = new Map();
-const subcommands = new Map();
-const cooldowns = new Map(); // Map<commandName, Map<userId, timestamp>>
+const registry_1 = require("./registry");
+const execution_1 = require("./execution");
 async function registerConverterPlugin(client) {
     logger_1.log.loading('Loading Converter Plugin...');
     // 1. Load Commands
@@ -56,13 +52,12 @@ function loadCommands(dir) {
                     if (catStat.isDirectory()) {
                         // This is a SUBCOMMAND GROUP (e.g. 'user') inside a category
                         const groupName = catFile;
-                        if (!subcommands.has(groupName)) {
-                            subcommands.set(groupName, {
-                                name: groupName,
-                                description: `Commands for ${groupName}`,
-                                subcommands: new Map()
-                            });
-                        }
+                        // Register Group
+                        registry_1.registry.registerGroup({
+                            name: groupName,
+                            description: `Commands for ${groupName}`,
+                            subcommands: new Map()
+                        });
                         // Load subcommands
                         const subCount = loadSubcommands(catFilePath, groupName, categoryName);
                         commandCount += subCount;
@@ -90,6 +85,7 @@ function loadCommands(dir) {
     }
     catch (err) {
         logger_1.log.error('Could not load commands', err);
+        process.exit(1);
     }
 }
 function loadSubcommands(dir, groupName, categoryName) {
@@ -109,96 +105,97 @@ function loadSingleCommand(path, categoryName, parentGroup) {
     try {
         const cmdModule = require(path);
         const cmd = cmdModule.default || cmdModule;
-        if (!cmd || !cmd.name)
+        if (!cmd)
             return false;
-        // Get Command Config
-        const cmdConfig = config_1.configManager.getCommand(categoryName, cmd.name, {
-            aliases: cmd.aliases,
-            cooldown: cmd.cooldown
-        });
-        if (!cmdConfig.enabled) {
-            logger_1.log.verbose(`Skipping disabled command: ${cmd.name} (${categoryName})`);
-            return false;
+        // Validate Command
+        const validationError = validateCommand(cmd, path);
+        if (validationError) {
+            logger_1.log.error(`[FATAL] Invalid command at ${path}: ${validationError}`);
+            process.exit(1);
         }
-        // Apply config values to command
-        cmd.aliases = cmdConfig.aliases;
-        cmd.cooldown = cmdConfig.cooldown;
-        if (parentGroup) {
-            const group = subcommands.get(parentGroup);
-            if (group) {
-                group.subcommands.set(cmd.name, cmd);
-                logger_1.log.verbose(`Loaded subcommand: ${parentGroup} ${cmd.name} [${categoryName}]`);
-                return true;
-            }
-        }
-        else {
-            exports.commands.set(cmd.name, cmd);
-            logger_1.log.verbose(`Loaded command: ${cmd.name} [${categoryName}]`);
-            return true;
-        }
+        registry_1.registry.register(cmd, path, categoryName, parentGroup);
+        return true;
     }
     catch (e) {
         logger_1.log.error(`Failed to load command at ${path}`, e);
+        process.exit(1);
     }
-    return false;
 }
-// Cooldown helper function
-function checkCooldown(commandName, userId, cooldownSeconds = 0) {
-    if (!cooldownSeconds || cooldownSeconds <= 0) {
-        return { onCooldown: false, remaining: 0 };
+function validateCommand(cmd, path) {
+    if (!cmd.name)
+        return 'Missing "name" property.';
+    if (!/^[\w-]{1,32}$/.test(cmd.name))
+        return 'Name must be 1-32 characters, alphanumeric/dashes only (lowercase recommended).';
+    if (!cmd.description)
+        return 'Missing "description" property.';
+    if (cmd.description.length < 1 || cmd.description.length > 100)
+        return 'Description must be between 1 and 100 characters.';
+    if (!cmd.run || typeof cmd.run !== 'function')
+        return 'Missing "run" function.';
+    return null;
+}
+// --- RUNTIME HANDLERS ---
+async function handleInteraction(interaction) {
+    if (interaction.isAutocomplete()) {
+        await (0, execution_1.executeHybridCommand)(interaction, true);
+        return;
     }
-    if (!cooldowns.has(commandName)) {
-        cooldowns.set(commandName, new Map());
-    }
-    const now = Date.now();
-    const timestamps = cooldowns.get(commandName);
-    const cooldownAmount = cooldownSeconds * 1000;
-    if (timestamps.has(userId)) {
-        const expirationTime = timestamps.get(userId) + cooldownAmount;
-        if (now < expirationTime) {
-            const timeLeft = (expirationTime - now) / 1000;
-            return { onCooldown: true, remaining: timeLeft };
-        }
-    }
-    timestamps.set(userId, now);
-    setTimeout(() => timestamps.delete(userId), cooldownAmount);
-    return { onCooldown: false, remaining: 0 };
+    if (!interaction.isChatInputCommand())
+        return;
+    await (0, execution_1.executeHybridCommand)(interaction);
+}
+async function handleMessage(message) {
+    if (message.author.bot)
+        return;
+    await (0, execution_1.executeHybridCommand)(message);
 }
 async function deployCommands(client) {
     const rest = new discord_js_1.REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
     const body = [];
     // Top-level commands
-    for (const cmd of exports.commands.values()) {
+    for (const cmd of registry_1.registry.getAll()) {
         if (cmd.type === 'prefix')
             continue; // Skip prefix-only
-        const builder = new discord_js_1.SlashCommandBuilder()
-            .setName(cmd.name)
-            .setDescription(cmd.description);
-        if (cmd.args) {
-            const args = (0, grammar_1.parseGrammar)(cmd.args);
-            applyArgsToBuilder(builder, args);
+        try {
+            const builder = new discord_js_1.SlashCommandBuilder()
+                .setName(cmd.name)
+                .setDescription(cmd.description);
+            if (cmd.args) {
+                const args = (0, grammar_1.parseGrammar)(cmd.args);
+                applyArgsToBuilder(builder, args);
+            }
+            if (cmd.permissions) {
+                builder.setDefaultMemberPermissions(discord_js_1.PermissionsBitField.resolve(cmd.permissions));
+            }
+            body.push(builder.toJSON());
         }
-        if (cmd.permissions) {
-            builder.setDefaultMemberPermissions(discord_js_1.PermissionsBitField.resolve(cmd.permissions));
+        catch (e) {
+            logger_1.log.error(`Failed to build slash command "${cmd.name}": ${e.message}`);
+            continue; // Skip invalid command but continue deploying others
         }
-        body.push(builder.toJSON());
     }
     // Subcommands
-    for (const group of subcommands.values()) {
-        const builder = new discord_js_1.SlashCommandBuilder()
-            .setName(group.name)
-            .setDescription(group.description);
-        for (const sub of group.subcommands.values()) {
-            const subBuilder = new discord_js_1.SlashCommandSubcommandBuilder()
-                .setName(sub.name)
-                .setDescription(sub.description);
-            if (sub.args) {
-                const args = (0, grammar_1.parseGrammar)(sub.args);
-                applyArgsToBuilder(subBuilder, args);
+    for (const group of registry_1.registry.getAllGroups()) {
+        try {
+            const builder = new discord_js_1.SlashCommandBuilder()
+                .setName(group.name)
+                .setDescription(group.description);
+            for (const sub of group.subcommands.values()) {
+                const subBuilder = new discord_js_1.SlashCommandSubcommandBuilder()
+                    .setName(sub.name)
+                    .setDescription(sub.description);
+                if (sub.args) {
+                    const args = (0, grammar_1.parseGrammar)(sub.args);
+                    applyArgsToBuilder(subBuilder, args);
+                }
+                builder.addSubcommand(subBuilder);
             }
-            builder.addSubcommand(subBuilder);
+            body.push(builder.toJSON());
         }
-        body.push(builder.toJSON());
+        catch (e) {
+            logger_1.log.error(`Failed to build subcommand group "${group.name}": ${e.message}`);
+            continue;
+        }
     }
     try {
         logger_1.log.loading('Deploying slash commands...');
@@ -245,226 +242,4 @@ function applyArgsToBuilder(builder, args) {
         }
     }
 }
-// --- PERMISSION HELPER ---
-function checkPermissions(cmd, member, user, guild) {
-    // 1. Level Check
-    const level = cmd.level || 'User';
-    if (level === 'Developer') {
-        const owners = (process.env.OWNER_IDS || '').split(',');
-        if (!owners.includes(user.id)) {
-            return '⛔ This command is reserved for the bot developer.';
-        }
-    }
-    if (level === 'ServerOwner') {
-        if (guild && guild.ownerId !== user.id) {
-            // Developers bypass ServerOwner check
-            const owners = (process.env.OWNER_IDS || '').split(',');
-            if (!owners.includes(user.id)) {
-                return '⛔ This command is reserved for the server owner.';
-            }
-        }
-    }
-    if (level === 'Admin') {
-        if (member) {
-            // Developers and Server Owners bypass Admin check
-            const owners = (process.env.OWNER_IDS || '').split(',');
-            const isDev = owners.includes(user.id);
-            const isOwner = guild && guild.ownerId === user.id;
-            const isAdmin = member.permissions.has(discord_js_1.PermissionsBitField.Flags.Administrator);
-            if (!isDev && !isOwner && !isAdmin) {
-                return '⛔ You need `Administrator` permission to use this command.';
-            }
-        }
-    }
-    // 2. Specific Discord Permissions Check
-    if (cmd.permissions && member) {
-        // Developers bypass specific permissions? Usually yes, but let's keep it strict or bypass.
-        // Let's allow devs to bypass everything for convenience.
-        const owners = (process.env.OWNER_IDS || '').split(',');
-        if (owners.includes(user.id))
-            return null;
-        if (!member.permissions.has(cmd.permissions)) {
-            return `⛔ You are missing the following permissions: \`${cmd.permissions.join(', ')}\``;
-        }
-    }
-    return null;
-}
-// --- RUNTIME HANDLERS ---
-async function handleInteraction(interaction) {
-    if (interaction.isAutocomplete()) {
-        const cmdName = interaction.commandName;
-        const subName = interaction.options.getSubcommand(false);
-        let cmd;
-        if (subName) {
-            const group = subcommands.get(cmdName);
-            cmd = group?.subcommands.get(subName);
-        }
-        else {
-            cmd = exports.commands.get(cmdName);
-        }
-        if (cmd && cmd.auto) {
-            const ctx = new context_1.Context(interaction.client, interaction.user, interaction.member, interaction.guild, interaction.channel, {}, interaction);
-            await cmd.auto(ctx);
-        }
-        return;
-    }
-    if (!interaction.isChatInputCommand())
-        return;
-    const cmdName = interaction.commandName;
-    const subName = interaction.options.getSubcommand(false);
-    let cmd;
-    if (subName) {
-        const group = subcommands.get(cmdName);
-        cmd = group?.subcommands.get(subName);
-    }
-    else {
-        cmd = exports.commands.get(cmdName);
-    }
-    if (!cmd)
-        return;
-    // Permission Check
-    const error = checkPermissions(cmd, interaction.member, interaction.user, interaction.guild);
-    if (error) {
-        return interaction.reply({ content: error, ephemeral: true });
-    }
-    // Parse Args from Interaction
-    const args = {};
-    if (cmd.args) {
-        const parsedArgs = (0, grammar_1.parseGrammar)(cmd.args);
-        for (const arg of parsedArgs) {
-            const val = interaction.options.get(arg.name)?.value;
-            if (val !== undefined) {
-                if (arg.type === 'user') {
-                    args[arg.name] = interaction.options.getUser(arg.name);
-                }
-                else {
-                    args[arg.name] = val;
-                }
-            }
-        }
-    }
-    const ctx = new context_1.Context(interaction.client, interaction.user, interaction.member, interaction.guild, interaction.channel, args, interaction);
-    // Log command execution
-    const commandFullName = subName ? `${cmdName} ${subName}` : cmdName;
-    logger_1.log.command(commandFullName, interaction.user.tag, args);
-    // Check cooldown
-    const cooldownCheck = checkCooldown(commandFullName, interaction.user.id, cmd.cooldown);
-    if (cooldownCheck.onCooldown) {
-        return interaction.reply({
-            content: `Please wait ${cooldownCheck.remaining.toFixed(1)} seconds before using this command again.`,
-            ephemeral: true
-        });
-    }
-    try {
-        await cmd.run(ctx);
-    }
-    catch (err) {
-        logger_1.log.error(`Error executing command: ${commandFullName}`, err);
-        if (!interaction.replied)
-            interaction.reply({ content: 'Error executing command', ephemeral: true });
-    }
-}
-async function handleMessage(message) {
-    if (message.author.bot)
-        return;
-    const prefix = process.env.PREFIX || '!';
-    if (!message.content.startsWith(prefix))
-        return;
-    const rawContent = message.content.slice(prefix.length).trim();
-    const parts = rawContent.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
-    if (parts.length === 0)
-        return;
-    const commandName = parts.shift().toLowerCase();
-    // Check for normal command
-    let cmd = exports.commands.get(commandName);
-    // If not found by name, check aliases
-    if (!cmd) {
-        for (const [name, command] of exports.commands) {
-            if (command.aliases && command.aliases.includes(commandName)) {
-                cmd = command;
-                break;
-            }
-        }
-    }
-    // Check for subcommand (e.g. !user info)
-    let subCommandName;
-    if (!cmd && subcommands.has(commandName)) {
-        const group = subcommands.get(commandName);
-        const subName = parts[0]?.toLowerCase();
-        if (subName && group?.subcommands.has(subName)) {
-            cmd = group.subcommands.get(subName);
-            subCommandName = subName;
-            parts.shift(); // consume subcommand name
-        }
-    }
-    if (!cmd)
-        return;
-    if (cmd.type === 'slash')
-        return; // Slash only
-    // Permission Check
-    const error = checkPermissions(cmd, message.member, message.author, message.guild);
-    if (error) {
-        return message.reply(error);
-    }
-    // Parse Prefix Args
-    const args = {};
-    if (cmd.args) {
-        const parsedArgs = (0, grammar_1.parseGrammar)(cmd.args);
-        for (let i = 0; i < parsedArgs.length; i++) {
-            const argDef = parsedArgs[i];
-            const rawArg = parts[i];
-            if (argDef.rest) {
-                // Rest argument consumes everything left
-                const restContent = parts.slice(i).join(' ');
-                if (restContent)
-                    args[argDef.name] = restContent;
-                break;
-            }
-            if (!rawArg) {
-                if (!argDef.optional) {
-                    return message.reply(`Missing required argument: \`${argDef.name}\``);
-                }
-                continue;
-            }
-            // Basic Type Conversion
-            let value = rawArg.replace(/^"|"$/g, ''); // remove quotes
-            if (argDef.type === 'number') {
-                value = Number(value);
-                if (isNaN(value))
-                    return message.reply(`Argument \`${argDef.name}\` must be a number.`);
-            }
-            else if (argDef.type === 'user') {
-                // Try to resolve user from mention or ID
-                const idMatch = value.match(/^<@!?(\d+)>$/) || [null, value];
-                const id = idMatch[1];
-                try {
-                    const user = await message.client.users.fetch(id);
-                    value = user;
-                }
-                catch {
-                    return message.reply(`Invalid user for argument \`${argDef.name}\``);
-                }
-            }
-            else if (argDef.type === 'boolean') {
-                value = ['true', 'yes', '1', 'on'].includes(value.toLowerCase());
-            }
-            args[argDef.name] = value;
-        }
-    }
-    const ctx = new context_1.Context(message.client, message.author, message.member, message.guild, message.channel, args, message);
-    // Log command execution
-    const commandFullName = subCommandName ? `${commandName} ${subCommandName}` : commandName;
-    logger_1.log.command(commandFullName, message.author.tag, args);
-    // Check cooldown
-    const cooldownCheck = checkCooldown(commandFullName, message.author.id, cmd.cooldown);
-    if (cooldownCheck.onCooldown) {
-        return message.reply(`Please wait ${cooldownCheck.remaining.toFixed(1)} seconds before using this command again.`);
-    }
-    try {
-        await cmd.run(ctx);
-    }
-    catch (err) {
-        logger_1.log.error(`Error executing command: ${commandFullName}`, err);
-        message.reply('Error executing command.');
-    }
-}
+//# sourceMappingURL=register.js.map

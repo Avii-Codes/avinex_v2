@@ -18,20 +18,21 @@
     "verify": "ts-node src/scripts/verify-framework.ts"
   },
   "dependencies": {
-    "@sapphire/framework": "^5.0.0",
-    "@sapphire/pieces": "^4.0.0",
-    "@sapphire/utilities": "^3.13.0",
+    "@sapphire/framework": "^5.4.0",
+    "@sapphire/pieces": "^4.3.1",
+    "@sapphire/utilities": "^3.17.0",
     "boxen": "^7.1.1",
     "chalk": "^4.1.2",
-    "discord.js": "^14.14.0",
-    "dotenv": "^16.3.1",
+    "discord.js": "^14.16.3",
+    "dotenv": "^17.0.0",
+    "mongoose": "^9.0.0",
     "winston": "^3.18.3"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
-    "nodemon": "^3.0.1",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.3.2"
+    "@types/node": "^22.10.0",
+    "nodemon": "^3.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
   },
   "engines": {
     "node": ">=16.9.0"

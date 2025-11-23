@@ -21,3 +21,4 @@ const command = {
     }
 };
 exports.default = command;
+//# sourceMappingURL=info.js.map

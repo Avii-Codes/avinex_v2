@@ -25,3 +25,4 @@ class HybridClient extends framework_1.SapphireClient {
     }
 }
 exports.HybridClient = HybridClient;
+//# sourceMappingURL=client.js.map

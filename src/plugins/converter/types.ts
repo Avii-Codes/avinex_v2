@@ -29,9 +29,9 @@ export interface HybridContext {
   args: Record<string, any>;
   raw: Message | ChatInputCommandInteraction | AutocompleteInteraction | null;
 
-  reply(content: string | { content?: string; embeds?: any[]; components?: any[]; ephemeral?: boolean }): Promise<any>;
-  edit(content: string | { content?: string; embeds?: any[]; components?: any[] }): Promise<any>;
-  follow(content: string | { content?: string; embeds?: any[]; components?: any[]; ephemeral?: boolean }): Promise<any>;
+  reply(content: string | { content?: string; embeds?: any[]; components?: any[]; ephemeral?: boolean; flags?: any }): Promise<any>;
+  edit(content: string | { content?: string; embeds?: any[]; components?: any[]; flags?: any }): Promise<any>;
+  follow(content: string | { content?: string; embeds?: any[]; components?: any[]; ephemeral?: boolean; flags?: any }): Promise<any>;
 }
 
 

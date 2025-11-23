@@ -120,3 +120,4 @@ foundCommands.forEach(({ category, name }) => {
 // 5. Save
 (0, fs_1.writeFileSync)(CONFIG_PATH, JSON.stringify(config, null, 2));
 logger_1.log.success(`Sync Complete. Added: ${addedCount}, Removed: ${removedCount}`);
+//# sourceMappingURL=sync-config.js.map
