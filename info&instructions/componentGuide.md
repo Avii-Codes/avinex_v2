@@ -21,7 +21,13 @@ const container = new Container();
 Add a simple text block.
 
 ```typescript
+// Simple form
 container.addText('## Hello World');
+
+// Or pass a pre-built TextDisplayBuilder
+const textDisplay = new TextDisplayBuilder()
+    .setContent('## Custom Text');
+container.addText(textDisplay);
 ```
 
 ### 3. Adding Separators
@@ -36,6 +42,12 @@ container.addSeparator({
     spacing: 'small', // 'small' | 'large'
     divider: true     // boolean
 });
+
+// Or pass a pre-built SeparatorBuilder
+const separator = new SeparatorBuilder()
+    .setSpacing(SeparatorSpacingSize.Large)
+    .setDivider(true);
+container.addSeparator(separator);
 ```
 
 ### 4. Adding Sections
@@ -82,6 +94,12 @@ container.addSection({
         url: 'https://example.com/avatar.png' // Required
     }
 });
+
+// Or pass a pre-built SectionBuilder
+const section = new SectionBuilder()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent('Custom Section'))
+    .setThumbnailAccessory(new ThumbnailBuilder({ media: { url: 'https://example.com/avatar.png' } }));
+container.addSection(section);
 ```
 
 ### 5. Adding Media Gallery
@@ -99,6 +117,12 @@ container.addMedia([
 container.addMedia([
     { url: 'attachment://local.png', description: 'A local file' }
 ]);
+
+// Or pass a pre-built MediaGalleryBuilder
+const gallery = new MediaGalleryBuilder().addItems([
+    { media: { url: 'https://example.com/pic.jpg' }, description: 'Custom gallery' }
+]);
+container.addMedia(gallery);
 
 // Sending with attachments
 import { AttachmentBuilder } from 'discord.js';

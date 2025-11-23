@@ -1,6 +1,7 @@
 import { HybridCommand } from '../../plugins/converter/types';
 import { Container } from '../../lib/components';
 import { MessageFlags } from 'discord.js';
+import { TextDisplayBuilder } from 'discord.js';
 const command: HybridCommand = {
     name: 'test',
     description: 'testing things out',
@@ -9,8 +10,10 @@ const command: HybridCommand = {
     args: '<thumbnail:string><image:string>',
 
     async run(ctx) {
+        const text = new TextDisplayBuilder()
+            .setContent('## User Stats');
         const container = new Container()
-            .addText('## User Stats')
+            .addText(text)
             .addSeparator({ spacing: 'small', divider: true })
             .addSection({
                 texts: ['**Username:** User123', '**Rank:** #1'],
