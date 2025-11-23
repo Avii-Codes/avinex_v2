@@ -1,4 +1,6 @@
 import { HybridCommand } from '../../../plugins/converter/types';
+import { Container } from '../../../lib/components';
+import { MessageFlags } from 'discord.js';
 
 const command: HybridCommand = {
     name: 'info',
@@ -8,16 +10,25 @@ const command: HybridCommand = {
     async run(ctx) {
         const user = ctx.args.target || ctx.user;
 
-        await ctx.reply({
-            embeds: [{
-                title: `User Info: ${user.username}`,
-                thumbnail: { url: user.displayAvatarURL() },
-                fields: [
-                    { name: 'ID', value: user.id, inline: true },
-                    { name: 'Bot?', value: user.bot ? 'Yes' : 'No', inline: true }
+        const container = new Container()
+            .setColor('#0099ff')
+            .addText(`## User Info: ${user.username}`)
+            .addSeparator({ spacing: 'small', divider: true })
+            .addSection({
+                texts: [
+                    `**ID:** ${user.id}`,
+                    `**Bot:** ${user.bot ? 'Yes' : 'No'}`,
+                    `**Created:** <t:${Math.floor(user.createdTimestamp / 1000)}:R>`
                 ],
-                color: 0x0099ff
-            }]
+                accessory: {
+                    type: 'thumbnail',
+                    url: user.displayAvatarURL()
+                }
+            });
+
+        await ctx.reply({
+            components: [container],
+            flags: [MessageFlags.IsComponentsV2]
         });
     }
 };

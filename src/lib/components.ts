@@ -19,6 +19,7 @@ import {
 
 export type SeparatorSize = 'small' | 'large';
 export type SectionAccessoryType = 'button' | 'thumbnail';
+export type ButtonStyleName = 'primary' | 'secondary' | 'success' | 'danger' | 'link';
 
 export interface SectionOptions {
     texts: string[];
@@ -28,7 +29,7 @@ export interface SectionOptions {
         label?: string;
         customId?: string;
         emoji?: string;
-        style?: ButtonStyle;
+        style?: ButtonStyle | ButtonStyleName;
         disabled?: boolean;
     };
 }
@@ -43,7 +44,7 @@ export interface ButtonOptions {
     customId?: string;
     url?: string;
     emoji?: string;
-    style?: ButtonStyle;
+    style?: ButtonStyle | ButtonStyleName;
     disabled?: boolean;
 }
 
@@ -101,11 +102,42 @@ export interface ActionRowOptions {
     menu?: SelectMenuOptions;
 }
 
+/**
+ * Converts a button style name to ButtonStyle enum value.
+ */
+function getButtonStyle(style: ButtonStyle | ButtonStyleName | undefined): ButtonStyle | undefined {
+    if (style === undefined) return undefined;
+    if (typeof style === 'number') return style;
+
+    const styleMap: Record<ButtonStyleName, ButtonStyle> = {
+        primary: ButtonStyle.Primary,
+        secondary: ButtonStyle.Secondary,
+        success: ButtonStyle.Success,
+        danger: ButtonStyle.Danger,
+        link: ButtonStyle.Link
+    };
+
+    return styleMap[style];
+}
+
 export class Container extends ContainerBuilder {
     public files: AttachmentBuilder[] = [];
 
     constructor() {
         super();
+    }
+
+    /**
+     * Sets the accent color for the container.
+     * @param color The color as a hex string ("#8b5a2b" or "8b5a2b") or hex number (0x8b5a2b).
+     * @returns The container instance for chaining.
+     */
+    public setColor(color: string | number): this {
+        const hexColor = typeof color === 'string'
+            ? parseInt(color.replace('#', ''), 16)
+            : color;
+        super.setAccentColor(hexColor);
+        return this;
     }
 
     /**
@@ -184,7 +216,7 @@ export class Container extends ContainerBuilder {
                 } else {
                     if (!options.accessory.customId) throw new Error('CustomID is required for non-link buttons');
                     button.setCustomId(options.accessory.customId);
-                    button.setStyle(options.accessory.style || ButtonStyle.Secondary);
+                    button.setStyle(getButtonStyle(options.accessory.style) || ButtonStyle.Secondary);
                 }
 
                 section.setButtonAccessory(button);
@@ -268,7 +300,7 @@ export class Container extends ContainerBuilder {
                     } else {
                         if (!btnOpts.customId) throw new Error('CustomID is required for non-link buttons');
                         button.setCustomId(btnOpts.customId);
-                        button.setStyle(btnOpts.style || ButtonStyle.Secondary);
+                        button.setStyle(getButtonStyle(btnOpts.style) || ButtonStyle.Secondary);
                     }
 
                     row.addComponents(button);

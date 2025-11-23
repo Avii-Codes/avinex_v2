@@ -24,6 +24,24 @@ await ctx.reply({
 });
 ```
 
+### Accent Color (Optional)
+
+Set an accent color for the entire container. This provides a visual theme.
+
+**Color Format:** Hex string (`"#8b5a2b"` or `"8b5a2b"`) or hex number (`0x8b5a2b`)
+
+```typescript
+// Using hex string (easiest)
+const container = new Container()
+    .setColor('#8b5a2b')
+    .addText('Themed container');
+
+// Or using hex number
+const container2 = new Container()
+    .setColor(0x8b5a2b)
+    .addText('Themed container');
+```
+
 ---
 
 ## Components
@@ -94,11 +112,26 @@ Group text with an accessory (button or thumbnail). Accessory is **required**.
 - `accessory.emoji`: `string` (optional)
 - `accessory.customId`: `string` (required for non-link buttons)
 - `accessory.url`: `string` (optional, makes it a link button)
-- `accessory.style`: `ButtonStyle` (optional, default: `Secondary`)
+- `accessory.style`: `ButtonStyle` or `'primary'` | `'secondary'` | `'success'` | `'danger'` | `'link'` (optional, default: `'secondary'`)
 - `accessory.disabled`: `boolean` (optional, default: `false`)
 
 **Regular Button:**
 ```typescript
+// Using string style (easiest)
+container.addSection({
+    texts: ['Click the button below'],
+    accessory: {
+        type: 'button',
+        label: 'Click Me',
+        emoji: '🔗',
+        customId: 'my_button',
+        style: 'primary', // Simple string!
+        disabled: false
+    }
+});
+
+// Or using ButtonStyle enum
+import { ButtonStyle } from 'discord.js';
 container.addSection({
     texts: ['Click the button below'],
     accessory: {
@@ -252,7 +285,7 @@ Add interactive components (buttons and select menus) grouped horizontally.
 - `emoji`: `string` (optional)
 - `customId`: `string` (required for non-link buttons)
 - `url`: `string` (optional, makes it a link button)
-- `style`: `ButtonStyle` (optional, default: `Secondary`)
+- `style`: `ButtonStyle` or `'primary'` | `'secondary'` | `'success'` | `'danger'` | `'link'` (optional, default: `'secondary'`)
 - `disabled`: `boolean` (optional, default: `false`)
 
 ```typescript
@@ -262,21 +295,21 @@ container.addActionRow({
             label: 'Play', 
             customId: 'play', 
             emoji: '▶️',
-            style: ButtonStyle.Success,
+            style: 'success', // Simple string!
             disabled: false
         },
         { 
             label: 'Pause', 
             customId: 'pause', 
             emoji: '⏸️',
-            style: ButtonStyle.Primary,
+            style: 'primary',
             disabled: false
         },
         { 
             label: 'Stop', 
             customId: 'stop', 
             emoji: '⏹️',
-            style: ButtonStyle.Danger,
+            style: 'danger',
             disabled: false
         },
         { 
@@ -417,6 +450,9 @@ import { ButtonStyle, MessageFlags, AttachmentBuilder } from 'discord.js';
 
 // Create container
 const container = new Container()
+    // Set accent color (optional)
+    .setColor('#8b5a2b')
+    
     // Header
     .addText('## 🎮 Music Player Dashboard')
     .addSeparator({ spacing: 'small', divider: true })
