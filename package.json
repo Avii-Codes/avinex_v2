@@ -12,7 +12,10 @@
     "sync-config": "ts-node src/scripts/sync-config.ts",
     "sc": "npm run sync-config",
     "refresh": "npm run reset-commands && npm run sync-config",
-    "rf": "npm run refresh"
+    "rf": "npm run refresh",
+    "create-command": "ts-node src/scripts/create-command.ts",
+    "cc": "npm run create-command",
+    "verify": "ts-node src/scripts/verify-framework.ts"
   },
   "dependencies": {
     "@sapphire/framework": "^5.0.0",

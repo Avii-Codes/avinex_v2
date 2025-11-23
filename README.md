@@ -2,6 +2,10 @@
 
 A powerful Discord bot template featuring a **Hybrid Command System** (Slash + Prefix), **Dynamic Configuration**, and **Hierarchical Permissions**.
 
+> [!TIP]
+> **New to the framework?**
+> Check out [FRAMEWORK_DOCS.md](FRAMEWORK_DOCS.md) for a deep dive into how everything works under the hood!
+
 ## 📦 Installation
 
 1.  **Install dependencies**:
@@ -22,65 +26,32 @@ A powerful Discord bot template featuring a **Hybrid Command System** (Slash + P
     npm run dev
     ```
 
-## 🌟 Features
+## 🌟 Key Features
 
-### 1. Hybrid Commands
-Write one command file, run it as both **Slash Command** (`/ping`) and **Prefix Command** (`!ping`).
-
-### 2. Permission Levels
-Control who can use commands with a simple `level` property.
-
-| Level | Description |
-| :--- | :--- |
-| `User` | Default. Available to everyone. |
-| `Admin` | Requires `Administrator` permission in the server. |
-| `ServerOwner` | Restricted to the Guild Owner. |
-| `Developer` | Restricted to users in `OWNER_IDS`. Bypasses all checks. |
-
-**Example:**
-```typescript
-export default {
-  name: 'nuke',
-  level: 'ServerOwner', // Only server owner can use this
-  run(ctx) { ... }
-}
-```
-
-### 3. Dynamic Configuration (`commands.json`)
-The bot automatically generates a `commands.json` file on the first run.
-You can edit this file to control your bot **without touching code**:
-
-*   **Enable/Disable**: Turn off specific commands or entire categories.
-*   **Aliases**: Add custom aliases (e.g., `!ban`, `!b`, `!hammer`).
-*   **Cooldowns**: Set per-command cooldowns in seconds.
-
-**Example `commands.json`:**
-```json
-{
-  "categories": {
-    "General": {
-      "enabled": true,
-      "commands": {
-        "ping": {
-          "enabled": true,
-          "aliases": ["pong", "latency"],
-          "cooldown": 5
-        }
-      }
-    }
-  }
-}
-```
-*New commands created in code are automatically added to this file!*
+- **Hybrid Commands**: Write once, run as Slash (`/`) or Prefix (`!`).
+- **Unified Execution**: Same logic for all trigger types.
+- **Robust Validation**: Fatal errors for invalid commands at startup.
+- **Smart Config**: `commands.json` auto-syncs even if you rename or move files.
+- **Monotonic Cooldowns**: Accurate cooldowns immune to system time changes.
+- **Auto-Deferral**: Never see "Interaction failed" again for slow commands.
 
 ## 🛠 Creating Commands
 
+**The easiest way to create a command is using the CLI generator:**
+
+```bash
+npm run cc
+```
+
+This interactive tool will ask for the category, name, type, and permission level, then generate a clean file for you.
+
+### Manual Creation
 Create a new file in `src/commands/`.
 
 ```typescript
 import { HybridCommand } from '../plugins/converter/types';
 
-export default {
+const command: HybridCommand = {
   name: 'greet',
   description: 'Greets a user',
   type: 'both',
@@ -91,16 +62,12 @@ export default {
     const { name, age } = ctx.args;
     await ctx.reply(`Hello ${name}!`);
   }
-} as HybridCommand;
+};
+
+export default command;
 ```
 
-### Argument Grammar
-- `<name>`: Required string
-- `<name?>`: Optional string
-- `<name:number>`: Number
-- `<name:user>`: Discord User
-- `<name:auto>`: Autocomplete String
-- `<name...>`: Rest (captures remaining text)
+For more details on argument grammar and advanced usage, see [FRAMEWORK_DOCS.md](FRAMEWORK_DOCS.md).
 
 ## 🤖 Programmatic Command Execution
 
@@ -141,7 +108,23 @@ await executeCommand(
 | :--- | :--- | :--- |
 | `npm run dev` | - | Start bot with hot-reload |
 | `npm run build` | - | Compile TypeScript |
+| `npm run create-command` | `npm run cc` | **Interactive Command Generator** |
+| `npm run verify` | - | Verify framework integrity |
 | `npm run reset-commands` | `npm run rs` | Clear all slash commands from Discord |
 | `npm run sync-config` | `npm run sc` | Sync `commands.json` with codebase |
 | `npm run refresh` | `npm run rf` | Reset + Sync (full refresh) |
 
+## 📁 Code Base Structure
+
+```text
+hybrid-bot/
+├── src/
+│   ├── commands/       # Your command files
+│   ├── plugins/        # Core framework logic
+│   ├── scripts/        # Utility scripts
+│   ├── utils/          # Helpers (Config, Logger)
+│   ├── client.ts       # Client setup
+│   └── index.ts        # Entry point
+├── commands.json       # Dynamic config (Auto-generated)
+└── README.md           # This file
+```

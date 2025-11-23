@@ -9,7 +9,8 @@
             "pi",
             "latency"
           ],
-          "cooldown": 10
+          "cooldown": 10,
+          "fingerprint": "bea574110ab81ac8bcd82ed93f8d9dc4"
         }
       }
     },
@@ -19,7 +20,8 @@
         "ban": {
           "enabled": true,
           "aliases": [],
-          "cooldown": 0
+          "cooldown": 0,
+          "fingerprint": "fa1dc1b41493b99adffceee647b3b4e1"
         }
       }
     },
@@ -29,17 +31,20 @@
         "search": {
           "enabled": true,
           "aliases": [],
-          "cooldown": 0
+          "cooldown": 0,
+          "fingerprint": "496c8e39aa186e126229bf56347d7a53"
         },
         "avatar": {
           "enabled": true,
           "aliases": [],
-          "cooldown": 0
+          "cooldown": 0,
+          "fingerprint": "0e808b39f23a1100e44b4a372eac76b0"
         },
         "info": {
           "enabled": true,
           "aliases": [],
-          "cooldown": 0
+          "cooldown": 0,
+          "fingerprint": "1dc0f53599a9a72fbf398465a7da8501"
         }
       }
     }

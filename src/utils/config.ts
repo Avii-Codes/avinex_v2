@@ -6,6 +6,7 @@ interface CommandConfig {
     enabled: boolean;
     aliases: string[];
     cooldown: number;
+    fingerprint?: string;
 }
 
 interface CategoryConfig {
@@ -57,13 +58,54 @@ export class ConfigManager {
     public getCommand(categoryName: string, commandName: string, defaults: Partial<CommandConfig> = {}): CommandConfig {
         const category = this.getCategory(categoryName);
 
+        // Check for rename/move via fingerprint
+        if (defaults.fingerprint) {
+            // 1. Check current category first
+            for (const [existingName, cmd] of Object.entries(category.commands)) {
+                if (cmd.fingerprint === defaults.fingerprint && existingName !== commandName) {
+                    log.warn(`Renaming config entry: ${existingName} -> ${commandName}`);
+                    category.commands[commandName] = cmd;
+                    delete category.commands[existingName];
+                    this.dirty = true;
+                    return category.commands[commandName];
+                }
+            }
+
+            // 2. Check ALL categories for move
+            for (const [catName, catConfig] of Object.entries(this.config.categories)) {
+                if (catName === categoryName) continue; // Already checked
+
+                for (const [existingName, cmd] of Object.entries(catConfig.commands)) {
+                    if (cmd.fingerprint === defaults.fingerprint) {
+                        log.warn(`Moving config entry: ${catName}/${existingName} -> ${categoryName}/${commandName}`);
+
+                        // Move command config to new category
+                        category.commands[commandName] = cmd;
+
+                        // Delete from old category
+                        delete catConfig.commands[existingName];
+
+                        this.dirty = true;
+                        return category.commands[commandName];
+                    }
+                }
+            }
+        }
+
         if (!category.commands[commandName]) {
             category.commands[commandName] = {
                 enabled: true,
                 aliases: defaults.aliases || [],
-                cooldown: defaults.cooldown || 0
+                cooldown: defaults.cooldown || 0,
+                fingerprint: defaults.fingerprint
             };
             this.dirty = true;
+        } else {
+            // Update fingerprint if missing
+            if (defaults.fingerprint && !category.commands[commandName].fingerprint) {
+                category.commands[commandName].fingerprint = defaults.fingerprint;
+                this.dirty = true;
+            }
         }
 
         return category.commands[commandName];
