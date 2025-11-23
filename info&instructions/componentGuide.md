@@ -84,7 +84,54 @@ container.addSection({
 });
 ```
 
+### 5. Adding Media Gallery
+Add a gallery of images (max 10 items). You can use remote URLs or local attachments.
+
+**Note**: For local attachments, you must construct the `AttachmentBuilder` manually and pass it in the `files` array when sending the message. The URL in `addMedia` should be `attachment://filename.png`.
+
+```typescript
+// Remote Image
+container.addMedia([
+    { url: 'https://example.com/image.png', description: 'A remote image' }
+]);
+
+// Local Attachment
+container.addMedia([
+    { url: 'attachment://local.png', description: 'A local file' }
+]);
+
+// Sending with attachments
+import { AttachmentBuilder } from 'discord.js';
+const file = new AttachmentBuilder('./path/to/local.png', { name: 'local.png' });
+
+await ctx.reply({
+    components: [container],
+    files: [file],
+    flags: [MessageFlags.IsComponentsV2]
+});
+```
+
+### 6. Adding Attachments
+You can add attachments directly to the container. They are stored in the `files` property, which you must pass to the reply options.
+
+```typescript
+// Add attachment
+container.addAttachment('./image.png', 'image.png');
+
+// Or with Buffer
+container.addAttachment(buffer, 'image.png');
+
+// Send message
+await ctx.reply({
+    components: [container],
+    files: container.files, // Pass the files here
+    flags: [MessageFlags.IsComponentsV2]
+});
+```
+
 ## Full Example
+
+
 
 ```typescript
 const container = new Container()

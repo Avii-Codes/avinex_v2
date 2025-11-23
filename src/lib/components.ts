@@ -6,7 +6,9 @@ import {
     SectionBuilder,
     ButtonBuilder,
     ButtonStyle,
-    ThumbnailBuilder
+    ThumbnailBuilder,
+    MediaGalleryBuilder,
+    AttachmentBuilder
 } from 'discord.js';
 
 export type SeparatorSize = 'small' | 'large';
@@ -24,7 +26,14 @@ export interface SectionOptions {
     };
 }
 
+export interface MediaItem {
+    url: string;
+    description?: string;
+}
+
 export class Container extends ContainerBuilder {
+    public files: AttachmentBuilder[] = [];
+
     constructor() {
         super();
     }
@@ -102,4 +111,40 @@ export class Container extends ContainerBuilder {
         this.addSectionComponents(section);
         return this;
     }
+
+    /**
+     * Adds a media gallery component to the container.
+     * @param items List of media items (max 10).
+     * @returns The container instance for chaining.
+     */
+    public addMedia(items: MediaItem[]): this {
+        if (items.length > 10) throw new Error('Media gallery cannot have more than 10 items.');
+
+        const gallery = new MediaGalleryBuilder();
+
+        const galleryItems = items.map(item => ({
+            media: { url: item.url },
+            description: item.description
+        }));
+
+        gallery.addItems(galleryItems);
+        this.addMediaGalleryComponents(gallery);
+        return this;
+    }
+
+    /**
+     * Adds an attachment to the container's file list.
+     * @param attachment The attachment source (path, buffer, or AttachmentBuilder).
+     * @param name Optional filename if passing a path/buffer.
+     * @returns The container instance for chaining.
+     */
+    public addAttachment(attachment: string | Buffer | AttachmentBuilder, name?: string): this {
+        if (attachment instanceof AttachmentBuilder) {
+            this.files.push(attachment);
+        } else {
+            this.files.push(new AttachmentBuilder(attachment, { name }));
+        }
+        return this;
+    }
 }
+

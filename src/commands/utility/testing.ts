@@ -6,7 +6,7 @@ const command: HybridCommand = {
     description: 'testing things out',
     type: 'both',
     level: 'Developer',
-    args: '<url:string>',
+    args: '<thumbnail:string><image:string>',
 
     async run(ctx) {
         const container = new Container()
@@ -16,7 +16,7 @@ const command: HybridCommand = {
                 texts: ['**Username:** User123', '**Rank:** #1'],
                 accessory: {
                     type: 'thumbnail',
-                    url: ctx.args.url
+                    url: ctx.args.thumbnail
                 }
             })
             .addSeparator()
@@ -25,9 +25,12 @@ const command: HybridCommand = {
                 accessory: {
                     type: 'button',
                     label: 'View Profile',
-                    url: 'https://example.com/profile'
+                    url: ctx.args.image
                 }
-            });
+            })
+        container.addMedia([
+            { url: ctx.args.image, description: 'A remote image' }
+        ]);
         // const { arg } = ctx.args;
         await ctx.reply({
             content: '',
