@@ -2,132 +2,192 @@
 
 The `Container` class in `src/lib/components.ts` simplifies creating Discord V2 components (Containers).
 
-## Usage
+## Quick Start
 
 Import the `Container` class:
 ```typescript
 import { Container } from '../../lib/components';
-import { ButtonStyle } from 'discord.js';
+import { ButtonStyle, MessageFlags } from 'discord.js';
 ```
 
-### 1. Basic Container
-Create a new container instance. It extends `ContainerBuilder`, so you can pass it directly to `components`.
-
+Create a container:
 ```typescript
 const container = new Container();
 ```
 
-### 2. Adding Text
-Add a simple text block.
-
+Send the message:
 ```typescript
-// Simple form
-container.addText('## Hello World');
-
-// Or pass a pre-built TextDisplayBuilder
-const textDisplay = new TextDisplayBuilder()
-    .setContent('## Custom Text');
-container.addText(textDisplay);
+await ctx.reply({
+    components: [container],
+    files: container.files, // Important if using addAttachment
+    flags: [MessageFlags.IsComponentsV2]
+});
 ```
 
-### 3. Adding Separators
-Add a separator line. You can customize spacing and visibility.
+---
 
+## Components
+
+### 1. Text Display
+
+Add text content to your container.
+
+**Simple Form:**
+```typescript
+container.addText('## Hello World');
+container.addText('Regular text with **markdown** support');
+```
+
+**Pre-built Form:**
+```typescript
+import { TextDisplayBuilder } from 'discord.js';
+
+const text = new TextDisplayBuilder()
+    .setContent('## Custom Text');
+container.addText(text);
+```
+
+---
+
+### 2. Separator
+
+Add visual separators between content.
+
+**Options:**
+- `spacing`: `'small'` | `'large'` (optional)
+- `divider`: `boolean` (optional) - shows a visible line
+
+**Simple Form:**
 ```typescript
 // Default separator
 container.addSeparator();
 
-// Customized separator
+// With options
 container.addSeparator({ 
-    spacing: 'small', // 'small' | 'large'
-    divider: true     // boolean
+    spacing: 'large',
+    divider: true
 });
+```
 
-// Or pass a pre-built SeparatorBuilder
+**Pre-built Form:**
+```typescript
+import { SeparatorBuilder, SeparatorSpacingSize } from 'discord.js';
+
 const separator = new SeparatorBuilder()
     .setSpacing(SeparatorSpacingSize.Large)
     .setDivider(true);
 container.addSeparator(separator);
 ```
 
-### 4. Adding Sections
-Sections allow you to group text with an accessory (Button or Thumbnail).
+---
+
+### 3. Section
+
+Group text with an accessory (button or thumbnail). Accessory is **required**.
 
 #### Button Section
-**Note**: `customId` is required unless you provide a `url`.
 
+**Options:**
+- `texts`: `string[]` - Array of text lines (required)
+- `accessory.type`: `'button'` (required)
+- `accessory.label`: `string` (optional)
+- `accessory.emoji`: `string` (optional)
+- `accessory.customId`: `string` (required for non-link buttons)
+- `accessory.url`: `string` (optional, makes it a link button)
+- `accessory.style`: `ButtonStyle` (optional, default: `Secondary`)
+- `accessory.disabled`: `boolean` (optional, default: `false`)
+
+**Regular Button:**
 ```typescript
 container.addSection({
-    texts: ['Click the button below to learn more.'],
+    texts: ['Click the button below'],
     accessory: {
         type: 'button',
-        label: 'Click Me',          // Optional
-        emoji: '🔗',                // Optional
-        style: ButtonStyle.Primary, // Optional (Default: Secondary)
-        customId: 'my_button_id'    // Required for non-link buttons
+        label: 'Click Me',
+        emoji: '🔗',
+        customId: 'my_button',
+        style: ButtonStyle.Primary,
+        disabled: false
     }
 });
 ```
 
-#### Link Button Section
-If a `url` is provided, the style is automatically set to `Link`.
-
+**Link Button:**
 ```typescript
 container.addSection({
     texts: ['Visit our website'],
     accessory: {
         type: 'button',
         label: 'Website',
-        url: 'https://example.com'
+        url: 'https://example.com',
+        emoji: '🌐',
+        disabled: false
     }
 });
 ```
 
 #### Thumbnail Section
-Displays a small image next to the text.
+
+**Options:**
+- `texts`: `string[]` (required)
+- `accessory.type`: `'thumbnail'` (required)
+- `accessory.url`: `string` (required)
 
 ```typescript
 container.addSection({
-    texts: ['User Profile', 'Level: 50'],
+    texts: ['User Profile', 'Level: 50', 'XP: 12,345'],
     accessory: {
         type: 'thumbnail',
-        url: 'https://example.com/avatar.png' // Required
+        url: 'https://example.com/avatar.png'
     }
 });
+```
 
-// Or pass a pre-built SectionBuilder
+**Pre-built Form:**
+```typescript
+import { SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from 'discord.js';
+
 const section = new SectionBuilder()
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent('Custom Section'))
-    .setThumbnailAccessory(new ThumbnailBuilder({ media: { url: 'https://example.com/avatar.png' } }));
+    .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent('Custom Section')
+    )
+    .setThumbnailAccessory(
+        new ThumbnailBuilder({ media: { url: 'https://example.com/avatar.png' } })
+    );
 container.addSection(section);
 ```
 
-### 5. Adding Media Gallery
-Add a gallery of images (max 10 items). You can use remote URLs or local attachments.
+---
 
-**Note**: For local attachments, you must construct the `AttachmentBuilder` manually and pass it in the `files` array when sending the message. The URL in `addMedia` should be `attachment://filename.png`.
+### 4. Media Gallery
 
+Display up to 10 images in a gallery format.
+
+**Options:**
+- `url`: `string` - Image URL or `attachment://filename.png` (required)
+- `description`: `string` (optional)
+
+**Remote Images:**
 ```typescript
-// Remote Image
 container.addMedia([
-    { url: 'https://example.com/image.png', description: 'A remote image' }
+    { url: 'https://example.com/image1.png', description: 'First image' },
+    { url: 'https://example.com/image2.png', description: 'Second image' }
 ]);
+```
 
-// Local Attachment
-container.addMedia([
-    { url: 'attachment://local.png', description: 'A local file' }
-]);
-
-// Or pass a pre-built MediaGalleryBuilder
-const gallery = new MediaGalleryBuilder().addItems([
-    { media: { url: 'https://example.com/pic.jpg' }, description: 'Custom gallery' }
-]);
-container.addMedia(gallery);
-
-// Sending with attachments
+**Local Attachments:**
+```typescript
 import { AttachmentBuilder } from 'discord.js';
-const file = new AttachmentBuilder('./path/to/local.png', { name: 'local.png' });
 
+// Create attachment
+const file = new AttachmentBuilder('./path/to/image.png', { name: 'image.png' });
+
+// Reference it
+container.addMedia([
+    { url: 'attachment://image.png', description: 'Local file' }
+]);
+
+// Send with files array
 await ctx.reply({
     components: [container],
     files: [file],
@@ -135,52 +195,351 @@ await ctx.reply({
 });
 ```
 
-### 6. Adding Attachments
-You can add attachments directly to the container. They are stored in the `files` property, which you must pass to the reply options.
+**Pre-built Form:**
+```typescript
+import { MediaGalleryBuilder } from 'discord.js';
+
+const gallery = new MediaGalleryBuilder().addItems([
+    { media: { url: 'https://example.com/pic.jpg' }, description: 'Custom' }
+]);
+container.addMedia(gallery);
+```
+
+---
+
+### 5. Attachments
+
+Add files to the container's file list for easy management.
+
+**Options:**
+- `attachment`: `string` (file path) | `Buffer` | `AttachmentBuilder`
+- `name`: `string` (required if using path/Buffer)
 
 ```typescript
-// Add attachment
+// File path
 container.addAttachment('./image.png', 'image.png');
 
-// Or with Buffer
-container.addAttachment(buffer, 'image.png');
+// Buffer
+container.addAttachment(buffer, 'file.png');
 
-// Send message
+// Pre-built AttachmentBuilder
+const attachment = new AttachmentBuilder('./file.png', { name: 'file.png' });
+container.addAttachment(attachment);
+
+// Send
 await ctx.reply({
     components: [container],
-    files: container.files, // Pass the files here
+    files: container.files,
     flags: [MessageFlags.IsComponentsV2]
 });
 ```
 
-## Full Example
+---
 
+### 6. Action Rows
 
+Add interactive components (buttons and select menus) grouped horizontally.
+
+**Rules:**
+- Max 5 buttons per row
+- Only 1 select menu per row
+- Cannot mix buttons and menus in the same row
+
+#### Buttons
+
+**Options:**
+- `label`: `string` (optional, but recommended)
+- `emoji`: `string` (optional)
+- `customId`: `string` (required for non-link buttons)
+- `url`: `string` (optional, makes it a link button)
+- `style`: `ButtonStyle` (optional, default: `Secondary`)
+- `disabled`: `boolean` (optional, default: `false`)
 
 ```typescript
-const container = new Container()
-    .addText('## User Stats')
-    .addSeparator({ spacing: 'small', divider: true })
-    .addSection({
-        texts: ['**Username:** User123', '**Rank:** #1'],
-        accessory: {
-            type: 'thumbnail',
-            url: 'https://example.com/avatar.png'
+container.addActionRow({
+    buttons: [
+        { 
+            label: 'Play', 
+            customId: 'play', 
+            emoji: '▶️',
+            style: ButtonStyle.Success,
+            disabled: false
+        },
+        { 
+            label: 'Pause', 
+            customId: 'pause', 
+            emoji: '⏸️',
+            style: ButtonStyle.Primary,
+            disabled: false
+        },
+        { 
+            label: 'Stop', 
+            customId: 'stop', 
+            emoji: '⏹️',
+            style: ButtonStyle.Danger,
+            disabled: false
+        },
+        { 
+            label: 'Help', 
+            url: 'https://example.com/help',
+            emoji: '❓',
+            disabled: false
         }
-    })
-    .addSeparator()
-    .addSection({
-        texts: ['View full profile on website'],
-        accessory: {
-            type: 'button',
-            label: 'View Profile',
-            url: 'https://example.com/profile'
-        }
-    });
-
-await ctx.edit({ 
-    content: '', 
-    components: [container], 
-    flags: [MessageFlags.IsComponentsV2] 
+    ]
 });
 ```
+
+#### Select Menus
+
+**Types:** `'string'` | `'user'` | `'role'` | `'mentionable'` | `'channel'`
+
+**Important Notes:**
+- **String Select**: Max 25 options, you must provide the `options` array
+- **User/Role/Channel/Mentionable**: Discord auto-generates the list, **do not** provide `options`
+
+| Select Menu Type | Max Options | Options List |
+|------------------|-------------|--------------|
+| String Select | 25 | ✅ Required |
+| User Select | N/A | ⚠️ Auto-generated by Discord |
+| Role Select | N/A | ⚠️ Auto-generated by Discord |
+| Channel Select | N/A | ⚠️ Auto-generated by Discord |
+| Mentionable Select | N/A | ⚠️ Auto-generated by Discord |
+
+**Common Options:**
+- `type`: `SelectMenuType` (required)
+- `customId`: `string` (required)
+- `placeholder`: `string` (optional)
+- `minValues`: `number` (optional)
+- `maxValues`: `number` (optional)
+- `disabled`: `boolean` (optional, default: `false`)
+
+**String Select Only:**
+- `options`: Array of `{ label, value, description?, emoji? }` (required, max 25)
+
+**String Select Menu:**
+```typescript
+container.addActionRow({
+    menu: {
+        type: 'string',
+        customId: 'menu1',
+        placeholder: 'Choose an option',
+        options: [
+            { 
+                label: 'Option A', 
+                value: 'A', 
+                description: 'First option',
+                emoji: '🅰️'
+            },
+            { 
+                label: 'Option B', 
+                value: 'B',
+                description: 'Second option',
+                emoji: '🅱️'
+            }
+        ],
+        minValues: 1,
+        maxValues: 2,
+        disabled: false
+    }
+});
+```
+
+**User Select Menu:**
+```typescript
+container.addActionRow({
+    menu: {
+        type: 'user',
+        customId: 'user_select',
+        placeholder: 'Select users',
+        minValues: 1,
+        maxValues: 5,
+        disabled: false
+    }
+});
+```
+
+**Role Select Menu:**
+```typescript
+container.addActionRow({
+    menu: {
+        type: 'role',
+        customId: 'role_select',
+        placeholder: 'Select a role',
+        disabled: false
+    }
+});
+```
+
+**Mentionable Select Menu:**
+```typescript
+container.addActionRow({
+    menu: {
+        type: 'mentionable',
+        customId: 'mention_select',
+        placeholder: 'Select users or roles'
+    }
+});
+```
+
+**Channel Select Menu:**
+```typescript
+container.addActionRow({
+    menu: {
+        type: 'channel',
+        customId: 'channel_select',
+        placeholder: 'Select a channel'
+    }
+});
+```
+
+**Pre-built Form:**
+```typescript
+import { ActionRowBuilder, ButtonBuilder } from 'discord.js';
+
+const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+        .setCustomId('btn1')
+        .setLabel('Click')
+        .setStyle(ButtonStyle.Primary)
+);
+container.addActionRow(row);
+```
+
+---
+
+## Complete Example
+
+Here's a comprehensive example using all features:
+
+```typescript
+import { Container } from '../../lib/components';
+import { ButtonStyle, MessageFlags, AttachmentBuilder } from 'discord.js';
+
+// Create container
+const container = new Container()
+    // Header
+    .addText('## 🎮 Music Player Dashboard')
+    .addSeparator({ spacing: 'small', divider: true })
+    
+    // Now Playing Section with Thumbnail
+    .addSection({
+        texts: [
+            '**Now Playing:** Song Title',
+            '**Artist:** Artist Name',
+            '**Duration:** 3:45 / 5:30'
+        ],
+        accessory: {
+            type: 'thumbnail',
+            url: 'https://example.com/album-cover.png'
+        }
+    })
+    .addSeparator({ spacing: 'large' })
+    
+    // Playback Controls (Buttons)
+    .addActionRow({
+        buttons: [
+            { label: 'Previous', customId: 'prev', emoji: '⏮️', style: ButtonStyle.Secondary },
+            { label: 'Play', customId: 'play', emoji: '▶️', style: ButtonStyle.Success },
+            { label: 'Pause', customId: 'pause', emoji: '⏸️', style: ButtonStyle.Primary, disabled: true },
+            { label: 'Next', customId: 'next', emoji: '⏭️', style: ButtonStyle.Secondary },
+            { label: 'Stop', customId: 'stop', emoji: '⏹️', style: ButtonStyle.Danger }
+        ]
+    })
+    
+    // Volume & Settings
+    .addActionRow({
+        buttons: [
+            { label: 'Volume Down', customId: 'vol_down', emoji: '🔉', style: ButtonStyle.Secondary },
+            { label: 'Volume Up', customId: 'vol_up', emoji: '🔊', style: ButtonStyle.Secondary },
+            { label: 'Settings', customId: 'settings', emoji: '⚙️', style: ButtonStyle.Secondary }
+        ]
+    })
+    
+    // Queue Selection
+    .addActionRow({
+        menu: {
+            type: 'string',
+            customId: 'queue_select',
+            placeholder: 'Jump to song in queue',
+            options: [
+                { label: 'Song 1', value: '1', description: 'Next in queue', emoji: '🎵' },
+                { label: 'Song 2', value: '2', description: 'Track 2', emoji: '🎵' },
+                { label: 'Song 3', value: '3', description: 'Track 3', emoji: '🎵' }
+            ],
+            minValues: 1,
+            maxValues: 1
+        }
+    })
+    
+    .addSeparator({ spacing: 'small', divider: true })
+    
+    // Stats & Info Section with Button
+    .addSection({
+        texts: [
+            '**Queue:** 15 songs',
+            '**Total Duration:** 1:23:45',
+            '**Listeners:** 42 users'
+        ],
+        accessory: {
+            type: 'button',
+            label: 'View Full Queue',
+            customId: 'view_queue',
+            emoji: '📋',
+            style: ButtonStyle.Primary
+        }
+    })
+    
+    // Image Gallery
+    .addMedia([
+        { url: 'https://example.com/visual1.png', description: 'Visualizer 1' },
+        { url: 'https://example.com/visual2.png', description: 'Visualizer 2' }
+    ])
+    
+    .addSeparator({ spacing: 'large' })
+    
+    // Links & External Actions
+    .addActionRow({
+        buttons: [
+            { label: 'Spotify', url: 'https://spotify.com/track/...', emoji: '🎧' },
+            { label: 'YouTube', url: 'https://youtube.com/watch?v=...', emoji: '▶️' }
+        ]
+    });
+
+// Optional: Add file attachments
+const coverArt = new AttachmentBuilder('./cover.png', { name: 'cover.png' });
+container.addAttachment(coverArt);
+
+// Send message
+await ctx.reply({
+    content: '',
+    components: [container],
+    files: container.files,
+    flags: [MessageFlags.IsComponentsV2]
+});
+```
+
+---
+
+## Tips & Best Practices
+
+1. **Chaining**: All methods return `this`, allowing for method chaining
+2. **Files**: Always include `files: container.files` if you used `addAttachment` or local media
+3. **Flags**: Always include `flags: [MessageFlags.IsComponentsV2]` for V2 components
+4. **Validation**: The helper automatically validates constraints (max buttons, required fields, etc.)
+5. **Disabled State**: Use `disabled: true` to show inactive buttons/menus
+6. **Pre-built**: You can mix simple and pre-built forms in the same container
+7. **Markdown**: Text supports Discord markdown formatting
+
+---
+
+## Quick Reference
+
+| Component | Max Count | Required Fields | Optional Fields |
+|-----------|-----------|-----------------|-----------------|
+| Text | Unlimited | `content` | - |
+| Separator | Unlimited | - | `spacing`, `divider` |
+| Section | Unlimited | `texts`, `accessory.type`, `accessory.url` (thumbnail) OR `accessory.customId` (button) | `label`, `emoji`, `style`, `disabled` |
+| Media | 10 per gallery | `url` | `description` |
+| Attachment | Unlimited | `path/buffer`, `name` | - |
+| Action Row (Buttons) | 5 per row | `customId` OR `url` | `label`, `emoji`, `style`, `disabled` |
+| Action Row (Menu) | 1 per row | `type`, `customId` | `placeholder`, `options`, `minValues`, `maxValues`, `disabled` |
