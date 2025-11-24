@@ -1,1 +1,0 @@
-{"version":3,"file":"controller.d.ts","sourceRoot":"","sources":["../../../src/systems/xp/controller.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,SAAS,EAAE,MAAM,WAAW,CAAC;AAEtC,qBAAa,YAAY;IACrB,OAAO,CAAC,OAAO,CAAY;gBAEf,OAAO,EAAE,SAAS;IAIjB,KAAK,CAAC,MAAM,EAAE,MAAM,EAAE,OAAO,EAAE,MAAM,EAAE,MAAM,EAAE,MAAM;IAIrD,QAAQ,CAAC,MAAM,EAAE,MAAM,EAAE,OAAO,EAAE,MAAM;CAGxD"}

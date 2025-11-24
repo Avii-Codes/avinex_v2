@@ -1,1 +1,0 @@
-{"version":3,"file":"BaseSystem.js","sourceRoot":"","sources":["../../src/systems/BaseSystem.ts"],"names":[],"mappings":";;;AAEA,4CAAsC;AAEtC,MAAsB,UAAU;IAIrB,KAAK,CAAC,IAAI,CAAC,MAAsB;QACpC,IAAI,CAAC,MAAM,GAAG,MAAM,CAAC;QACrB,YAAG,CAAC,IAAI,CAAC,wBAAwB,IAAI,CAAC,IAAI,EAAE,CAAC,CAAC;QAC9C,MAAM,IAAI,CAAC,MAAM,EAAE,CAAC;IACxB,CAAC;CAGJ;AAXD,gCAWC"}
