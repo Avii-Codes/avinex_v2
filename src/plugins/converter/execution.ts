@@ -74,6 +74,8 @@ export async function executeHybridCommand(
 
     // 2. Find Command
     let cmd: HybridCommand | undefined;
+    let usedAlias: string | null = null;
+
     if (subCommandName) {
         const group = registry.getGroup(commandName);
         cmd = group?.subcommands.get(subCommandName);
@@ -81,7 +83,11 @@ export async function executeHybridCommand(
         cmd = registry.get(commandName);
         if (!cmd && !isSlash) {
             // Check aliases for prefix commands
-            cmd = registry.getByAlias(commandName);
+            const aliasCmd = registry.getByAlias(commandName);
+            if (aliasCmd) {
+                usedAlias = commandName; // Store the alias that was used
+                cmd = aliasCmd;
+            }
         }
     }
 
@@ -205,7 +211,10 @@ export async function executeHybridCommand(
 
     // 9. Execution
     try {
-        const commandFullName = subCommandName ? `${commandName} ${subCommandName}` : commandName;
+        let commandFullName = subCommandName ? `${cmd.name} ${subCommandName}` : cmd.name;
+        if (usedAlias) {
+            commandFullName += ` (alias: ${usedAlias})`;
+        }
         log.command(commandFullName, ctx.user.tag, args);
         await cmd.run(ctx);
     } catch (err) {

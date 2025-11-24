@@ -157,6 +157,78 @@ export class Container extends ContainerBuilder {
     }
 
     /**
+     * Adds a header (text + separator). This is a convenience method.
+     * Counts as 2 components.
+     * @param content Header text content.
+     * @param options Optional separator options.
+     * @returns The container instance for chaining.
+     */
+    public addHeader(content: string, options?: { spacing?: SeparatorSize; divider?: boolean }): this {
+        this.validateComponentLimit();
+        this.validateComponentLimit(); // Validate twice since we're adding 2 components
+
+        this.addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
+        this.componentCount++;
+
+        const separator = new SeparatorBuilder();
+        if (options?.spacing) {
+            const spacingMap: Record<SeparatorSize, SeparatorSpacingSize> = {
+                small: SeparatorSpacingSize.Small,
+                large: SeparatorSpacingSize.Large
+            };
+            separator.setSpacing(spacingMap[options.spacing]);
+        }
+        if (options?.divider !== undefined) {
+            separator.setDivider(options.divider);
+        }
+        this.addSeparatorComponents(separator);
+        this.componentCount++;
+
+        return this;
+    }
+
+    /**
+     * Adds a footer (separator + text). This is a convenience method.
+     * Counts as 2 components.
+     * @param content Footer text content.
+     * @param options Optional separator options.
+     * @returns The container instance for chaining.
+     */
+    public addFooter(content: string, options?: { spacing?: SeparatorSize; divider?: boolean }): this {
+        this.validateComponentLimit();
+        this.validateComponentLimit(); // Validate twice since we're adding 2 components
+
+        const separator = new SeparatorBuilder();
+        if (options?.spacing) {
+            const spacingMap: Record<SeparatorSize, SeparatorSpacingSize> = {
+                small: SeparatorSpacingSize.Small,
+                large: SeparatorSpacingSize.Large
+            };
+            separator.setSpacing(spacingMap[options.spacing]);
+        }
+        if (options?.divider !== undefined) {
+            separator.setDivider(options.divider);
+        }
+        this.addSeparatorComponents(separator);
+        this.componentCount++;
+
+        this.addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
+        this.componentCount++;
+
+        return this;
+    }
+
+    /**
+     * Adds a divider (separator with divider enabled). This is a convenience method.
+     * Counts as 1 component.
+     * @param spacing Optional spacing size.
+     * @returns The container instance for chaining.
+     */
+    public addDivider(spacing?: SeparatorSize): this {
+        return this.addSeparator({ spacing, divider: true });
+    }
+
+    /**
      * Adds a text display component to the container.
      * @param content The content string or a pre-built TextDisplayBuilder.
      * @returns The container instance for chaining.

@@ -42,6 +42,25 @@ const container2 = new Container()
     .addText('Themed container');
 ```
 
+### Custom Helper Methods
+
+The Container class provides convenient shortcuts for common patterns:
+
+**addHeader(content, options?)** - Text + Separator (2 components)
+```typescript
+container.addHeader('## My Section', { spacing: 'small', divider: true });
+```
+
+**addFooter(content, options?)** - Separator + Text (2 components)
+```typescript
+container.addFooter('*Updated: now*', { divider: true });
+```
+
+**addDivider(spacing?)** - Visible divider line (1 component)
+```typescript
+container.addDivider('large');
+```
+
 ---
 
 ## Components

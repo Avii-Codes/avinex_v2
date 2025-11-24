@@ -1,5 +1,5 @@
-import { HybridCommand } from '../../../plugins/converter/types';
-import { Container } from '../../../lib/components';
+import { HybridCommand } from '../../plugins/converter/types';
+import { Container } from '../../lib/components';
 import { MessageFlags } from 'discord.js';
 
 const command: HybridCommand = {
@@ -11,7 +11,6 @@ const command: HybridCommand = {
         const user = ctx.args.target || ctx.user;
 
         const container = new Container()
-            .setColor('#0099ff')
             .addText(`## User Info: ${user.username}`)
             .addSeparator({ spacing: 'small', divider: true })
             .addSection({

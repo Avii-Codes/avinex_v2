@@ -1,6 +1,7 @@
 import { SapphireClient } from '@sapphire/framework';
 import { GatewayIntentBits } from 'discord.js';
 import { registerConverterPlugin } from '../plugins/converter/register';
+import { setupComponentHandlers } from '../listeners/componentHandler';
 import { db } from '../database';
 import { log } from '../utils/logger';
 import { readdirSync, statSync } from 'fs';
@@ -36,13 +37,16 @@ export class ExtendedClient extends SapphireClient {
             // 2. Register Hybrid Command Plugin
             await registerConverterPlugin(this);
 
-            // 3. Load Systems
+            // 3. Setup Component Handlers
+            setupComponentHandlers(this);
+
+            // 4. Load Systems
             await this.loadSystems();
 
-            // 4. Load Events
+            // 5. Load Events
             await this.loadEvents();
 
-            // 5. Login
+            // 6. Login
             await this.login(process.env.DISCORD_TOKEN);
 
         } catch (error) {

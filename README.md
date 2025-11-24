@@ -83,7 +83,46 @@ const command: HybridCommand = {
 export default command;
 ```
 
-For more details on argument grammar and advanced usage, see [FRAMEWORK_DOCS.md](FRAMEWORK_DOCS.md).
+For more details on argument grammar and advanced usage, see [FRAMEWORK_DOCS.md](info&instructions/FRAMEWORK_DOCS.md).
+
+## 🎨 Container Component Helper
+
+Build modern Discord V2 message components with ease using the `Container` helper:
+
+```typescript
+import { Container } from './lib/components';
+import { MessageFlags } from 'discord.js';
+
+const container = new Container()
+    .setColor('#5865F2')
+    .addHeader('## Dashboard', { divider: true })
+    .addText('Welcome to the bot!')
+    .addSection({
+        texts: ['**Status:** Online', '**Users:** 1,234'],
+        accessory: {
+            type: 'button',
+            label: 'Refresh',
+            customId: 'refresh',
+            style: 'primary'
+        }
+    })
+    .addDivider()
+    .addFooter('*Last updated: now*');
+
+await ctx.reply({
+    components: [container],
+    flags: [MessageFlags.IsComponentsV2]
+});
+```
+
+**Features:**
+- Text, Separators, Sections (with thumbnails/buttons)
+- Media Galleries, Attachments
+- Action Rows (buttons & select menus)
+- Custom helpers: `addHeader()`, `addFooter()`, `addDivider()`
+- Automatic validation (40 component limit, 3 texts per section)
+
+See [componentGuide.md](info&instructions/componentGuide.md) for complete documentation.
 
 ## 🤖 Programmatic Command Execution
 

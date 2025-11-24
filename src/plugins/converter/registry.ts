@@ -9,6 +9,8 @@ export class CommandRegistry {
     private aliases = new Map<string, string>(); // alias -> canonicalName
     private subcommands = new Map<string, SubCommandGroup>();
     private fileFingerprints = new Map<string, string>(); // fingerprint -> canonicalName
+    private commandCategories = new Map<string, string>(); // commandName -> category
+    private groupCategories = new Map<string, string>(); // groupName -> category
 
     public register(cmd: HybridCommand, filePath: string, category: string, parentGroup?: string) {
         const fingerprint = this.calculateFingerprint(filePath);
@@ -51,12 +53,18 @@ export class CommandRegistry {
                 process.exit(1);
             }
             group.subcommands.set(cmd.name, cmd);
+            // Store category for the group if not already set
+            if (!this.groupCategories.has(parentGroup)) {
+                this.groupCategories.set(parentGroup, category);
+            }
         } else {
             if (this.commands.has(cmd.name)) {
                 log.error(`[FATAL] Command collision: ${cmd.name} is already registered.`);
                 process.exit(1);
             }
             this.commands.set(cmd.name, cmd);
+            // Store category for this command
+            this.commandCategories.set(cmd.name, category);
 
             // Register Aliases
             if (cmd.aliases) {
@@ -99,6 +107,52 @@ export class CommandRegistry {
 
     public getAllGroups(): IterableIterator<SubCommandGroup> {
         return this.subcommands.values();
+    }
+
+    public getCategory(commandName: string): string | undefined {
+        return this.commandCategories.get(commandName);
+    }
+
+    public getGroupCategory(groupName: string): string | undefined {
+        return this.groupCategories.get(groupName);
+    }
+
+    public getCommandsByCategory(category: string): Map<string, HybridCommand> {
+        const result = new Map<string, HybridCommand>();
+
+        // Add top-level commands in this category
+        for (const [name, cmd] of this.commands.entries()) {
+            if (this.commandCategories.get(name) === category) {
+                result.set(name, cmd);
+            }
+        }
+
+        // Add subcommands from groups in this category
+        for (const group of this.subcommands.values()) {
+            if (this.groupCategories.get(group.name) === category) {
+                for (const [name, subcmd] of group.subcommands) {
+                    result.set(`${group.name}/${name}`, subcmd);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public getCategories(): string[] {
+        const categories = new Set<string>();
+
+        // Collect categories from commands
+        for (const category of this.commandCategories.values()) {
+            categories.add(category);
+        }
+
+        // Collect categories from groups
+        for (const category of this.groupCategories.values()) {
+            categories.add(category);
+        }
+
+        return Array.from(categories).sort();
     }
 
     private calculateFingerprint(filePath: string): string {

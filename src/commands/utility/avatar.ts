@@ -1,5 +1,5 @@
-import { HybridCommand } from '../../../plugins/converter/types';
-import { Container } from '../../../lib/components';
+import { HybridCommand } from '../../plugins/converter/types';
+import { Container } from '../../lib/components';
 import { MessageFlags } from 'discord.js';
 
 const command: HybridCommand = {
@@ -12,7 +12,6 @@ const command: HybridCommand = {
         const avatarUrl = user.displayAvatarURL({ size: 512 });
 
         const container = new Container()
-            .setColor('#0099ff')
             .addText(`## Avatar for ${user.username}`)
             .addSeparator({ spacing: 'small', divider: true })
             .addMedia([

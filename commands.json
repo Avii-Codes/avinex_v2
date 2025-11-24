@@ -1,16 +1,25 @@
 {
   "categories": {
-    "core": {
+    "general": {
       "enabled": true,
       "commands": {
+        "help": {
+          "enabled": true,
+          "aliases": [
+            "h",
+            "hlp"
+          ],
+          "cooldown": 0,
+          "fingerprint": "d721eef4f4825ea238a3afbb2a49bd33"
+        },
         "ping": {
           "enabled": true,
           "aliases": [
-            "pi",
+            "p",
             "latency"
           ],
-          "cooldown": 5,
-          "fingerprint": "bea574110ab81ac8bcd82ed93f8d9dc4"
+          "cooldown": 30,
+          "fingerprint": "46de17434f1cf43a1365d2f88dd8fdea"
         }
       }
     },
@@ -36,13 +45,17 @@
         },
         "avatar": {
           "enabled": true,
-          "aliases": [],
+          "aliases": [
+            "av"
+          ],
           "cooldown": 0,
           "fingerprint": "0e808b39f23a1100e44b4a372eac76b0"
         },
         "info": {
           "enabled": true,
-          "aliases": [],
+          "aliases": [
+            "i"
+          ],
           "cooldown": 0,
           "fingerprint": "1dc0f53599a9a72fbf398465a7da8501"
         },
@@ -54,7 +67,9 @@
         },
         "test": {
           "enabled": true,
-          "aliases": [],
+          "aliases": [
+            "t"
+          ],
           "cooldown": 0,
           "fingerprint": "07e5e615cf63cca0642a6b5f6d2d5bf2"
         },
