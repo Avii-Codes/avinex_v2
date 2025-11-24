@@ -29,9 +29,9 @@ export interface HybridContext {
   args: Record<string, any>;
   raw: Message | ChatInputCommandInteraction | AutocompleteInteraction | null;
 
-  reply(content: string | { content?: string; embeds?: any[]; components?: any[]; ephemeral?: boolean; flags?: any }): Promise<any>;
-  edit(content: string | { content?: string; embeds?: any[]; components?: any[]; flags?: any }): Promise<any>;
-  follow(content: string | { content?: string; embeds?: any[]; components?: any[]; ephemeral?: boolean; flags?: any }): Promise<any>;
+  reply(content: string | { content?: string; embeds?: any[]; components?: any[]; ephemeral?: boolean; flags?: any; files?: any[] }): Promise<any>;
+  edit(content: string | { content?: string; embeds?: any[]; components?: any[]; flags?: any; files?: any[] }): Promise<any>;
+  follow(content: string | { content?: string; embeds?: any[]; components?: any[]; ephemeral?: boolean; flags?: any; files?: any[] }): Promise<any>;
 }
 
 
@@ -55,4 +55,11 @@ export interface SubCommandGroup {
   name: string;
   description: string;
   subcommands: Map<string, HybridCommand>;
+}
+
+export interface RootCommandCollection {
+  name: string;
+  description: string;
+  subcommands: Map<string, HybridCommand>; // Direct subcommands: /root sub
+  groups: Map<string, SubCommandGroup>;    // Nested groups: /root group sub
 }

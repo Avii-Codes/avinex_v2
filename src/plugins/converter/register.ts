@@ -69,19 +69,48 @@ function loadCommands(dir: string) {
           const catStat = statSync(catFilePath);
 
           if (catStat.isDirectory()) {
-            // This is a SUBCOMMAND GROUP (e.g. 'user') inside a category
-            const groupName = catFile;
+            // This is a ROOT COMMAND (e.g. 'user') inside a category
+            const rootName = catFile;
+            const rootPath = catFilePath;
 
-            // Register Group
-            registry.registerGroup({
-              name: groupName,
-              description: `Commands for ${groupName}`,
-              subcommands: new Map()
+            // Register Root Collection
+            registry.registerRoot({
+              name: rootName,
+              description: `Commands for ${rootName}`,
+              subcommands: new Map(),
+              groups: new Map()
             });
 
-            // Load subcommands
-            const subCount = loadSubcommands(catFilePath, groupName, categoryName);
-            commandCount += subCount;
+            // Scan Root Folder
+            const rootFiles = readdirSync(rootPath);
+            for (const rootFile of rootFiles) {
+              const rootFilePath = join(rootPath, rootFile);
+              const rootStat = statSync(rootFilePath);
+
+              if (rootStat.isDirectory()) {
+                // This is a NESTED GROUP (e.g. 'settings') inside a root
+                const groupName = rootFile;
+                const groupPath = rootFilePath;
+
+                // Register Group under Root
+                registry.registerGroup(rootName, {
+                  name: groupName,
+                  description: `Commands for ${groupName}`,
+                  subcommands: new Map()
+                });
+
+                // Load subcommands for this group
+                // We pass "Root/Group" as the parentGroup identifier
+                const subCount = loadSubcommands(groupPath, `${rootName}/${groupName}`, categoryName);
+                commandCount += subCount;
+
+              } else if (rootFile.endsWith('.ts') || rootFile.endsWith('.js')) {
+                // This is a DIRECT SUBCOMMAND of the root
+                if (loadSingleCommand(rootFilePath, categoryName, rootName)) {
+                  commandCount++;
+                }
+              }
+            }
 
           } else if (catFile.endsWith('.ts') || catFile.endsWith('.js')) {
             // This is a TOP-LEVEL COMMAND inside a category
@@ -206,14 +235,15 @@ async function deployCommands(client: Client) {
     }
   }
 
-  // Subcommands
-  for (const group of registry.getAllGroups()) {
+  // Subcommands (Roots)
+  for (const root of registry.getAllRoots()) {
     try {
       const builder = new SlashCommandBuilder()
-        .setName(group.name)
-        .setDescription(group.description);
+        .setName(root.name)
+        .setDescription(root.description);
 
-      for (const sub of group.subcommands.values()) {
+      // 1. Direct Subcommands (/root sub)
+      for (const sub of root.subcommands.values()) {
         const subBuilder = new SlashCommandSubcommandBuilder()
           .setName(sub.name)
           .setDescription(sub.description);
@@ -226,9 +256,35 @@ async function deployCommands(client: Client) {
         builder.addSubcommand(subBuilder);
       }
 
+      // 2. Nested Groups (/root group sub)
+      for (const group of root.groups.values()) {
+        // We need a SubcommandGroupBuilder here, but djs uses a method on the main builder
+        // .addSubcommandGroup(group => group.setName()...)
+
+        builder.addSubcommandGroup(groupBuilder => {
+          groupBuilder
+            .setName(group.name)
+            .setDescription(group.description);
+
+          for (const sub of group.subcommands.values()) {
+            const subBuilder = new SlashCommandSubcommandBuilder()
+              .setName(sub.name)
+              .setDescription(sub.description);
+
+            if (sub.args) {
+              const args = parseGrammar(sub.args);
+              applyArgsToBuilder(subBuilder, args);
+            }
+
+            groupBuilder.addSubcommand(subBuilder);
+          }
+          return groupBuilder;
+        });
+      }
+
       body.push(builder.toJSON());
     } catch (e: any) {
-      log.error(`Failed to build subcommand group "${group.name}": ${e.message}`);
+      log.error(`Failed to build root command "${root.name}": ${e.message}`);
       continue;
     }
   }

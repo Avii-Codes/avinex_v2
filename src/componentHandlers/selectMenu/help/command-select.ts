@@ -7,7 +7,7 @@ import { registry } from '../../../plugins/converter/registry';
 // Register handler for command selection (pattern: help:cmd:*)
 registerSelectMenu('help:cmd:', async (interaction: StringSelectMenuInteraction) => {
     const commandName = interaction.values[0];
-    const command = registry.get(commandName);
+    const command = registry.getCommandByPath(commandName);
 
     if (!command) {
         await interaction.reply({ content: `${Status.error} Command not found!`, ephemeral: true });

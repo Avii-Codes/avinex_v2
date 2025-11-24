@@ -37,11 +37,30 @@ export async function executeHybridCommand(
     let isSlash = false;
     let isVirtual = false;
 
+    let cmd: HybridCommand | undefined;
+    let usedAlias: string | null = null;
+    let groupName: string | null = null;
+
     // 1. Resolve Command & Arguments
     if (trigger instanceof ChatInputCommandInteraction || trigger instanceof AutocompleteInteraction) {
         isSlash = true;
         commandName = trigger.commandName;
         subCommandName = trigger.options.getSubcommand(false);
+        groupName = trigger.options.getSubcommandGroup(false);
+
+        if (groupName) {
+            // 3-level: /root group sub
+            const root = registry.getRoot(commandName);
+            const group = root?.groups.get(groupName);
+            cmd = group?.subcommands.get(subCommandName!);
+        } else if (subCommandName) {
+            // 2-level: /root sub
+            const root = registry.getRoot(commandName);
+            cmd = root?.subcommands.get(subCommandName);
+        } else {
+            // 1-level: /command
+            cmd = registry.get(commandName);
+        }
     } else {
         // Prefix or Virtual Command
         const content = 'content' in trigger ? trigger.content : '';
@@ -56,29 +75,63 @@ export async function executeHybridCommand(
         commandName = tokens[0].value.toLowerCase();
 
         // Check for subcommand
-        const group = registry.getGroup(commandName);
-        if (group && tokens.length > 1) {
-            const potentialSub = tokens[1].value.toLowerCase();
-            if (group.subcommands.has(potentialSub)) {
-                subCommandName = potentialSub;
-                rawArgs = tokens.slice(2); // Remove cmd + sub
-            } else {
-                rawArgs = tokens.slice(1);
+        const root = registry.getRoot(commandName);
+
+        if (root && tokens.length > 1) {
+            const potentialSubOrGroup = tokens[1].value.toLowerCase();
+
+            // Check if it's a group
+            if (root.groups.has(potentialSubOrGroup)) {
+                if (tokens.length > 2) {
+                    const potentialSub = tokens[2].value.toLowerCase();
+                    const group = root.groups.get(potentialSubOrGroup)!;
+
+                    if (group.subcommands.has(potentialSub)) {
+                        // Found /root group sub
+                        cmd = group.subcommands.get(potentialSub);
+                        subCommandName = potentialSub;
+                        rawArgs = tokens.slice(3);
+                    }
+                }
             }
-        } else {
+
+            // If not found yet, check direct subcommand
+            if (!cmd && root.subcommands.has(potentialSubOrGroup)) {
+                // Found /root sub
+                cmd = root.subcommands.get(potentialSubOrGroup);
+                subCommandName = potentialSubOrGroup;
+                rawArgs = tokens.slice(2);
+            }
+        }
+
+        if (!cmd) {
+            // Fallback to top-level command
+            cmd = registry.get(commandName);
             rawArgs = tokens.slice(1);
+
+            if (!cmd && !isSlash) {
+                // Check aliases for prefix commands
+                const aliasCmd = registry.getByAlias(commandName);
+                if (aliasCmd) {
+                    usedAlias = commandName; // Store the alias that was used
+                    cmd = aliasCmd;
+                }
+            }
         }
 
         if (!('client' in trigger)) isVirtual = true;
     }
 
     // 2. Find Command
-    let cmd: HybridCommand | undefined;
-    let usedAlias: string | null = null;
 
     if (subCommandName) {
-        const group = registry.getGroup(commandName);
-        cmd = group?.subcommands.get(subCommandName);
+        const root = registry.getRoot(commandName);
+        if (groupName) {
+            const group = root?.groups.get(groupName);
+            cmd = group?.subcommands.get(subCommandName);
+        } else {
+            cmd = root?.subcommands.get(subCommandName);
+        }
     } else {
         cmd = registry.get(commandName);
         if (!cmd && !isSlash) {

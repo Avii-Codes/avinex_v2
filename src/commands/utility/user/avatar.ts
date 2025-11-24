@@ -1,5 +1,5 @@
-import { HybridCommand } from '../../plugins/converter/types';
-import { Container } from '../../lib/components';
+import { HybridCommand } from '../../../plugins/converter/types';
+import { Container } from '../../../lib/components';
 import { MessageFlags } from 'discord.js';
 
 const command: HybridCommand = {

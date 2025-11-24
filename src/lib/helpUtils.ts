@@ -14,20 +14,7 @@ export function getCategories(): string[] {
  * Get all commands (simplified for now)
  */
 export function getAllCommands(): Map<string, HybridCommand> {
-    const commands = new Map();
-
-    for (const command of registry.getAll()) {
-        commands.set(command.name, command);
-    }
-
-    // Add subcommands with "group/name" format
-    for (const group of registry.getAllGroups()) {
-        for (const [name, subcommand] of group.subcommands) {
-            commands.set(`${group.name}/${name}`, subcommand);
-        }
-    }
-
-    return commands;
+    return registry.getFlattenedCommands();
 }
 
 /**
@@ -62,9 +49,7 @@ export function capitalize(str: string): string {
  * Format command name for display
  */
 export function formatCommandName(name: string): string {
-    // Remove category prefix if present
-    const parts = name.split('/');
-    return parts[parts.length - 1];
+    return name.replace(/\//g, ' ');
 }
 
 /**

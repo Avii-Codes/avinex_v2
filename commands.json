@@ -78,6 +78,12 @@
           "aliases": [],
           "cooldown": 0,
           "fingerprint": "4846857c5c3c66596fccc83442abb537"
+        },
+        "leaf": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "de5ca268cc0eea6680b5df274129c6e8"
         }
       }
     }
