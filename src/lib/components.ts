@@ -122,9 +122,25 @@ function getButtonStyle(style: ButtonStyle | ButtonStyleName | undefined): Butto
 
 export class Container extends ContainerBuilder {
     public files: AttachmentBuilder[] = [];
+    private componentCount: number = 0;
+    private static readonly MAX_COMPONENTS = 40;
 
     constructor() {
         super();
+    }
+
+    /**
+     * Validates that adding a component won't exceed the 50-component limit.
+     * @throws Error if limit would be exceeded
+     */
+    private validateComponentLimit(): void {
+        if (this.componentCount >= Container.MAX_COMPONENTS) {
+            throw new Error(
+                `Container component limit exceeded! Maximum ${Container.MAX_COMPONENTS} components allowed. ` +
+                `Current count: ${this.componentCount}. ` +
+                `Note: Each add* method (addText, addSeparator, addSection, addMedia, addActionRow) counts as 1 component.`
+            );
+        }
     }
 
     /**
@@ -146,11 +162,22 @@ export class Container extends ContainerBuilder {
      * @returns The container instance for chaining.
      */
     public addText(content: string | TextDisplayBuilder): this {
+        this.validateComponentLimit();
+
+        // Validate character limit for string content
+        if (typeof content === 'string' && content.length > 4000) {
+            throw new Error(
+                `Text content exceeds maximum length! Maximum 4000 characters allowed. ` +
+                `Current length: ${content.length} characters.`
+            );
+        }
+
         if (content instanceof TextDisplayBuilder) {
             this.addTextDisplayComponents(content);
         } else {
             this.addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
         }
+        this.componentCount++;
         return this;
     }
 
@@ -160,6 +187,7 @@ export class Container extends ContainerBuilder {
      * @returns The container instance for chaining.
      */
     public addSeparator(options?: { spacing?: SeparatorSize; divider?: boolean } | SeparatorBuilder): this {
+        this.validateComponentLimit();
         if (options instanceof SeparatorBuilder) {
             this.addSeparatorComponents(options);
         } else {
@@ -179,6 +207,7 @@ export class Container extends ContainerBuilder {
 
             this.addSeparatorComponents(separator);
         }
+        this.componentCount++;
         return this;
     }
 
@@ -188,9 +217,24 @@ export class Container extends ContainerBuilder {
      * @returns The container instance for chaining.
      */
     public addSection(options: SectionOptions | SectionBuilder): this {
+        this.validateComponentLimit();
         if (options instanceof SectionBuilder) {
             this.addSectionComponents(options);
         } else {
+            // Validate texts array is not empty
+            if (!options.texts || options.texts.length === 0) {
+                throw new Error('Section must have at least one text element in the texts array.');
+            }
+
+            // Validate max 3 texts per section
+            if (options.texts.length > 3) {
+                throw new Error(
+                    `Section can have a maximum of 3 text elements. ` +
+                    `Current count: ${options.texts.length}. ` +
+                    `Consider splitting into multiple sections or using addText() instead.`
+                );
+            }
+
             const section = new SectionBuilder();
 
             // Add text components
@@ -224,6 +268,7 @@ export class Container extends ContainerBuilder {
 
             this.addSectionComponents(section);
         }
+        this.componentCount++;
         return this;
     }
 
@@ -233,6 +278,7 @@ export class Container extends ContainerBuilder {
      * @returns The container instance for chaining.
      */
     public addMedia(items: MediaItem[] | MediaGalleryBuilder): this {
+        this.validateComponentLimit();
         if (items instanceof MediaGalleryBuilder) {
             this.addMediaGalleryComponents(items);
         } else {
@@ -248,6 +294,7 @@ export class Container extends ContainerBuilder {
             gallery.addItems(galleryItems);
             this.addMediaGalleryComponents(gallery);
         }
+        this.componentCount++;
         return this;
     }
 
@@ -272,8 +319,10 @@ export class Container extends ContainerBuilder {
      * @returns The container instance for chaining.
      */
     public addActionRow(options: ActionRowOptions | ActionRowBuilder): this {
+        this.validateComponentLimit();
         if (options instanceof ActionRowBuilder) {
             this.addActionRowComponents(options as any);
+            this.componentCount++;
         } else {
             // Validate: must have either buttons or menu, not both
             if (options.buttons && options.menu) {
@@ -373,6 +422,8 @@ export class Container extends ContainerBuilder {
                     }
                 }
             }
+
+            this.componentCount++;
         }
         return this;
     }

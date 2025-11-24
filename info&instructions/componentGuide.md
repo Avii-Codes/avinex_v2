@@ -50,7 +50,9 @@ const container2 = new Container()
 
 Add text content to your container.
 
-**Simple Form:**
+**Character Limit:** 4000 characters per text component
+
+**Simple Form:****
 ```typescript
 container.addText('## Hello World');
 container.addText('Regular text with **markdown** support');
@@ -97,21 +99,6 @@ const separator = new SeparatorBuilder()
 container.addSeparator(separator);
 ```
 
----
-
-### 3. Section
-
-Group text with an accessory (button or thumbnail). Accessory is **required**.
-
-#### Button Section
-
-**Options:**
-- `texts`: `string[]` - Array of text lines (required)
-- `accessory.type`: `'button'` (required)
-- `accessory.label`: `string` (optional)
-- `accessory.emoji`: `string` (optional)
-- `accessory.customId`: `string` (required for non-link buttons)
-- `accessory.url`: `string` (optional, makes it a link button)
 - `accessory.style`: `ButtonStyle` or `'primary'` | `'secondary'` | `'success'` | `'danger'` | `'link'` (optional, default: `'secondary'`)
 - `accessory.disabled`: `boolean` (optional, default: `false`)
 
@@ -565,6 +552,13 @@ await ctx.reply({
 5. **Disabled State**: Use `disabled: true` to show inactive buttons/menus
 6. **Pre-built**: You can mix simple and pre-built forms in the same container
 7. **Markdown**: Text supports Discord markdown formatting
+8. **Component Limit**: **Maximum 40 components per Container**
+   - Each `addText()` = 1 component
+   - Each `addSeparator()` = 1 component  
+   - Each `addSection()` = 1 component (regardless of text count or accessory)
+   - Each `addMedia()` = 1 component (even with 10 images)
+   - Each `addActionRow()` = 1 component (regardless of buttons/menu inside)
+   - The Container will throw an error if you exceed this limit
 
 ---
 
@@ -572,9 +566,10 @@ await ctx.reply({
 
 | Component | Max Count | Required Fields | Optional Fields |
 |-----------|-----------|-----------------|-----------------|
-| Text | Unlimited | `content` | - |
-| Separator | Unlimited | - | `spacing`, `divider` |
-| Section | Unlimited | `texts`, `accessory.type`, `accessory.url` (thumbnail) OR `accessory.customId` (button) | `label`, `emoji`, `style`, `disabled` |
+| **Container** | **40 total components** | - | `setColor()` |
+| Text | Unlimited (within container limit) | `content` (max 4000 chars) | - |
+| Separator | Unlimited (within container limit) | - | `spacing`, `divider` |
+| Section | Unlimited (within container limit) | `texts` (1-3 items), `accessory.type`, `accessory.url` (thumbnail) OR `accessory.customId` (button) | `label`, `emoji`, `style`, `disabled` |
 | Media | 10 per gallery | `url` | `description` |
 | Attachment | Unlimited | `path/buffer`, `name` | - |
 | Action Row (Buttons) | 5 per row | `customId` OR `url` | `label`, `emoji`, `style`, `disabled` |

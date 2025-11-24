@@ -57,6 +57,12 @@
           "aliases": [],
           "cooldown": 0,
           "fingerprint": "07e5e615cf63cca0642a6b5f6d2d5bf2"
+        },
+        "stats": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "4846857c5c3c66596fccc83442abb537"
         }
       }
     }
