@@ -14,7 +14,7 @@ import { join } from 'path';
 import { parseGrammar } from './grammar';
 import { CommandArg, HybridCommand } from './types';
 import { configManager } from '../../utils/config';
-import { log } from '../../utils/logger';
+import { log, ProgressBar } from '../../utils/logger';
 import { registry } from './registry';
 import { executeHybridCommand } from './execution';
 
@@ -32,11 +32,7 @@ export async function registerConverterPlugin(client: Client) {
   client.on(Events.MessageCreate, handleMessage);
   client.on(Events.InteractionCreate, handleInteraction);
 
-  // 3. Deploy Slash Commands (on ready)
-  client.once(Events.ClientReady, async (c) => {
-
-    await deployCommands(c);
-  });
+  // Note: deployCommands is now called manually in ready.ts
 }
 
 function loadCommands(dir: string) {
@@ -44,6 +40,21 @@ function loadCommands(dir: string) {
     // 1. Scan Root (src/commands)
     const rootFiles = readdirSync(dir);
     const categoryStats = new Map<string, number>();
+
+    // Count total files for progress bar (rough estimate)
+    let totalFiles = 0;
+    const countFiles = (d: string) => {
+      const files = readdirSync(d);
+      for (const file of files) {
+        const p = join(d, file);
+        if (statSync(p).isDirectory()) countFiles(p);
+        else if (file.endsWith('.ts') || file.endsWith('.js')) totalFiles++;
+      }
+    };
+    countFiles(dir);
+
+    const bar = new ProgressBar(totalFiles, 'Loading commands...');
+    let processedFiles = 0;
 
     for (const file of rootFiles) {
       const path = join(dir, file);
@@ -58,7 +69,7 @@ function loadCommands(dir: string) {
         // Check Config for Category
         const categoryConfig = configManager.getCategory(categoryName);
         if (!categoryConfig.enabled) {
-          log.category(categoryName, 0, false);
+          // log.category(categoryName, 0, false); // Skip logging disabled for cleaner UI
           continue;
         }
 
@@ -100,14 +111,18 @@ function loadCommands(dir: string) {
                 });
 
                 // Load subcommands for this group
-                // We pass "Root/Group" as the parentGroup identifier
-                const subCount = loadSubcommands(groupPath, `${rootName}/${groupName}`, categoryName);
+                const subCount = loadSubcommands(groupPath, `${rootName}/${groupName}`, categoryName, () => {
+                  processedFiles++;
+                  bar.update(processedFiles, `Loading ${categoryName}...`);
+                });
                 commandCount += subCount;
 
               } else if (rootFile.endsWith('.ts') || rootFile.endsWith('.js')) {
                 // This is a DIRECT SUBCOMMAND of the root
                 if (loadSingleCommand(rootFilePath, categoryName, rootName)) {
                   commandCount++;
+                  processedFiles++;
+                  bar.update(processedFiles, `Loading ${categoryName}...`);
                 }
               }
             }
@@ -116,6 +131,8 @@ function loadCommands(dir: string) {
             // This is a TOP-LEVEL COMMAND inside a category
             if (loadSingleCommand(catFilePath, categoryName)) {
               commandCount++;
+              processedFiles++;
+              bar.update(processedFiles, `Loading ${categoryName}...`);
             }
           }
         }
@@ -126,9 +143,13 @@ function loadCommands(dir: string) {
         // This is a TOP-LEVEL COMMAND in the root (Category: General)
         if (loadSingleCommand(path, 'General')) {
           categoryStats.set('General', (categoryStats.get('General') || 0) + 1);
+          processedFiles++;
+          bar.update(processedFiles, 'Loading General...');
         }
       }
     }
+
+    bar.finish('Commands loaded successfully!');
 
     // Log category stats
     categoryStats.forEach((count, category) => {
@@ -141,7 +162,7 @@ function loadCommands(dir: string) {
   }
 }
 
-function loadSubcommands(dir: string, groupName: string, categoryName: string): number {
+function loadSubcommands(dir: string, groupName: string, categoryName: string, onProgress?: () => void): number {
   const files = readdirSync(dir);
   let count = 0;
   for (const file of files) {
@@ -149,6 +170,7 @@ function loadSubcommands(dir: string, groupName: string, categoryName: string): 
       const path = join(dir, file);
       if (loadSingleCommand(path, categoryName, groupName)) {
         count++;
+        if (onProgress) onProgress();
       }
     }
   }
@@ -206,7 +228,8 @@ async function handleMessage(message: Message) {
   await executeHybridCommand(message);
 }
 
-async function deployCommands(client: Client) {
+// Export deployCommands for manual calling
+export async function deployCommands(client: Client) {
   const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);
   const body: any[] = [];
 

@@ -1,6 +1,8 @@
 import winston from 'winston';
 import chalk from 'chalk';
 import boxen from 'boxen';
+import gradient from 'gradient-string';
+import figlet from 'figlet';
 
 const isDev = process.env.DEV_MODE === 'true';
 
@@ -55,7 +57,7 @@ export const logger = winston.createLogger({
 export const box = {
     create: (
         content: string,
-        style: 'single' | 'double' | 'round' | 'bold' | 'classic' = 'double',
+        style: 'single' | 'double' | 'round' | 'bold' | 'classic' | 'none' = 'double',
         options: any = {}
     ): string => {
         return boxen(content, {
@@ -71,7 +73,7 @@ export const box = {
         return boxen(content, {
             padding: { top: 1, bottom: 1, left: 2, right: 2 },
             margin: 0,
-            borderStyle: 'double',
+            borderStyle: 'none',
             borderColor: 'cyan',
             textAlignment: 'center',
             ...options
@@ -124,24 +126,36 @@ export const box = {
 };
 
 // ASCII Art Banner
-export function displayBanner() {
-    const logo = `
-${chalk.bold.magenta('  █████╗ ██╗   ██╗██╗███╗   ██╗███████╗██╗  ██╗')}
-${chalk.bold.magenta(' ██╔══██╗██║   ██║██║████╗  ██║██╔════╝╚██╗██╔╝')}
-${chalk.bold.magenta(' ███████║██║   ██║██║██╔██╗ ██║█████╗   ╚███╔╝')}
-${chalk.bold.magenta(' ██╔══██║╚██╗ ██╔╝██║██║╚██╗██║██╔══╝   ██╔██╗')}
-${chalk.bold.magenta(' ██║  ██║ ╚████╔╝ ██║██║ ╚████║███████╗██╔╝ ██╗')}
-${chalk.bold.magenta(' ╚═╝  ╚═╝  ╚═══╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝')}
+export async function animateBanner() {
+    // Generate big text using figlet
+    const logoText = figlet.textSync('AVINEX', {
+        font: 'ANSI Shadow',
+        horizontalLayout: 'full',
+        verticalLayout: 'default'
+    });
 
-${chalk.yellow.bold('⚡ Advanced Discord Bot Framework ⚡')}
-${chalk.gray('Hybrid Commands • AI Ready • Dynamic Config')}
+    const logo = `
+${gradient('#00F0FF', '#00A3FF', '#9D00FF')(logoText)}
+${(chalk.bold(gradient('#98FFFD', '#6FCEFF', '#4C8CFF')('⚡ Advanced Discord Bot Framework ⚡')))}
+${(chalk.gray('Hybrid Commands • AI Ready • Dynamic Config'))}
 `;
 
-    console.log(box.banner(logo, {
-        padding: { top: 0, bottom: 0, left: 5, right: 5 },
+
+
+    // Create the full boxed banner
+    const banner = box.banner(logo, {
+        padding: { top: 0, bottom: 0, left: 6, right: 6 },
         margin: { top: 1, bottom: 1 },
-        textAlignment: 'center'
-    }));
+        textAlignment: 'center',
+        borderColor: 'cyan'
+    });
+
+    // Animate banner line by line
+    const lines = banner.split('\n');
+    for (const line of lines) {
+        console.log(line);
+        await new Promise(r => setTimeout(r, 50));
+    }
 
     const mode = isDev ? chalk.yellow.bold('DEVELOPMENT') : chalk.green.bold('PRODUCTION');
     const timestamp = new Date().toLocaleString('en-US', {
@@ -149,19 +163,60 @@ ${chalk.gray('Hybrid Commands • AI Ready • Dynamic Config')}
         timeStyle: 'medium'
     });
 
-    // Use boxen for info box
-    const infoContent = `${chalk.cyan('Mode:')} ${mode}
-${chalk.cyan('Started:')} ${chalk.white(timestamp)}`;
+    const infoContent = `${chalk.cyan('Mode:')} ${mode}\n${chalk.cyan('Started:')} ${chalk.white(timestamp)}`;
 
-    console.log(); // Empty line
     console.log('  ' + boxen(infoContent, {
         padding: { left: 1, right: 1, top: 0, bottom: 0 },
-        margin: 0,
-        borderStyle: 'single',
+        margin: { top: 0, bottom: 0, left: 0, right: 0 },
+        borderStyle: 'round',
         borderColor: 'gray',
         width: 55
     }).split('\n').join('\n  '));
     console.log();
+}
+
+export class ProgressBar {
+    private total: number;
+    private current: number = 0;
+    private width: number = 50;
+    private message: string = '';
+
+    constructor(total: number, message: string = 'Loading...') {
+        this.total = total;
+        this.message = message;
+    }
+
+    public update(current: number, message?: string) {
+        this.current = current;
+        if (message) this.message = message;
+        this.render();
+    }
+
+    public increment(message?: string) {
+        this.current++;
+        if (message) this.message = message;
+        this.render();
+    }
+
+    public finish(message: string = 'Done!') {
+        this.current = this.total;
+        this.render();
+        console.log(); // New line
+        log.success(message);
+    }
+
+    private render() {
+        const percentage = Math.min(this.current / this.total, 1);
+        const percent = Math.round(percentage * 100).toString().padStart(3);
+
+        // Format: ⟳ 50% | Message
+        const bar = `  ${chalk.blue('⟳')} ${chalk.yellow(percent + '%')} ${chalk.gray('|')} ${this.message}`;
+
+        // Clear line and write
+        process.stdout.clearLine(0);
+        process.stdout.cursorTo(0);
+        process.stdout.write(bar);
+    }
 }
 
 // Helper logging functions

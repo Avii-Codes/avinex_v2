@@ -1,17 +1,19 @@
+import { Events } from 'discord.js';
 import { ExtendedClient } from '../client/ExtendedClient';
 import { log } from '../utils/logger';
-import { ActivityType } from 'discord.js';
+import { deployCommands } from '../plugins/converter/register';
 
 export default {
-    name: 'ready',
+    name: Events.ClientReady,
     once: true,
     async execute(client: ExtendedClient) {
-        log.success(`Logged in as ${client.user?.tag}!`);
-        log.info(`Ready to serve ${client.guilds.cache.size} guilds.`);
+        // 1. Log Login
+        log.success(`Logged in as ${client.user?.tag}`);
 
-        client.user?.setActivity({
-            name: 'Hybrid Commands',
-            type: ActivityType.Listening
-        });
-    }
+        // 3. Deploy Commands
+        await deployCommands(client);
+
+        // 4. Set Activity
+        client.user?.setActivity('Hybrid Commands | /help');
+    },
 };

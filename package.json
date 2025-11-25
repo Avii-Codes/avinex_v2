@@ -25,10 +25,14 @@
     "chalk": "^4.1.2",
     "discord.js": "^14.16.3",
     "dotenv": "^17.0.0",
+    "figlet": "^1.9.4",
+    "gradient-string": "^3.0.0",
     "mongoose": "^9.0.0",
     "winston": "^3.18.3"
   },
   "devDependencies": {
+    "@types/figlet": "^1.7.0",
+    "@types/gradient-string": "^1.1.6",
     "@types/node": "^22.10.0",
     "nodemon": "^3.1.7",
     "ts-node": "^10.9.2",

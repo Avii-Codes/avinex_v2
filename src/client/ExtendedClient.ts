@@ -3,7 +3,7 @@ import { GatewayIntentBits } from 'discord.js';
 import { registerConverterPlugin } from '../plugins/converter/register';
 import { setupComponentHandlers } from '../listeners/componentHandler';
 import { db } from '../database';
-import { log } from '../utils/logger';
+import { log, animateBanner } from '../utils/logger';
 import { readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { BaseSystem } from '../systems/BaseSystem';
@@ -27,6 +27,9 @@ export class ExtendedClient extends SapphireClient {
 
     public async init() {
         try {
+            // 0. Animate Banner
+            await animateBanner();
+
             // 1. Connect to Database
             if (process.env.MONGODB_URI) {
                 await db.connect(process.env.MONGODB_URI);

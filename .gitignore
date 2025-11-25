@@ -32,7 +32,7 @@ temp/
 tmp/
 
 # ───── DATABASE / LOCAL DATA ─────
-data/
+
 
 *.sqlite
 *.db
