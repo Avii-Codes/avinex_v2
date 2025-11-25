@@ -34,7 +34,7 @@ export async function registerConverterPlugin(client: Client) {
 
   // 3. Deploy Slash Commands (on ready)
   client.once(Events.ClientReady, async (c) => {
-    log.success(`Logged in as ${c.user.tag}`);
+
     await deployCommands(c);
   });
 }

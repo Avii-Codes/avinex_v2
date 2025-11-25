@@ -33,7 +33,7 @@ tmp/
 
 # ───── DATABASE / LOCAL DATA ─────
 data/
-database/
+
 *.sqlite
 *.db
 

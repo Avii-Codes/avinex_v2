@@ -79,11 +79,23 @@
           "cooldown": 0,
           "fingerprint": "4846857c5c3c66596fccc83442abb537"
         },
-        "leaf": {
+        "testroot/nested/leaf": {
           "enabled": true,
           "aliases": [],
           "cooldown": 0,
           "fingerprint": "de5ca268cc0eea6680b5df274129c6e8"
+        },
+        "user/avatar": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "cfb9c28f6a59b2d17bfab6a64fdcc730"
+        },
+        "user/info": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "ff1ac132b3d8aa3a9d2ca3c6c9810284"
         }
       }
     }

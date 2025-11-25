@@ -14,19 +14,20 @@ export class CommandRegistry {
 
     public register(cmd: HybridCommand, filePath: string, category: string, parentGroup?: string) {
         const fingerprint = this.calculateFingerprint(filePath);
+        const configKey = parentGroup ? `${parentGroup}/${cmd.name}` : cmd.name;
 
         // Check if this file was known by another name (renaming support)
         const existingName = this.fileFingerprints.get(fingerprint);
-        if (existingName && existingName !== cmd.name) {
-            log.warn(`Detected rename: ${existingName} -> ${cmd.name}. Updating config...`);
+        if (existingName && existingName !== configKey) {
+            log.warn(`Detected rename: ${existingName} -> ${configKey}. Updating config...`);
             // In a real scenario, we might auto-migrate config here.
             // For now, we just log it, but the configManager needs to handle it.
         }
 
-        this.fileFingerprints.set(fingerprint, cmd.name);
+        this.fileFingerprints.set(fingerprint, configKey);
 
         // Get Config
-        const cmdConfig = configManager.getCommand(category, cmd.name, {
+        const cmdConfig = configManager.getCommand(category, configKey, {
             aliases: cmd.aliases,
             cooldown: cmd.cooldown,
             fingerprint: fingerprint
