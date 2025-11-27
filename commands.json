@@ -37,20 +37,6 @@
     "utility": {
       "enabled": true,
       "commands": {
-        "search": {
-          "enabled": true,
-          "aliases": [],
-          "cooldown": 0,
-          "fingerprint": "496c8e39aa186e126229bf56347d7a53"
-        },
-        "avatar": {
-          "enabled": true,
-          "aliases": [
-            "av"
-          ],
-          "cooldown": 0,
-          "fingerprint": "0e808b39f23a1100e44b4a372eac76b0"
-        },
         "info": {
           "enabled": true,
           "aliases": [
@@ -79,6 +65,28 @@
           "cooldown": 0,
           "fingerprint": "4846857c5c3c66596fccc83442abb537"
         },
+        "search": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "496c8e39aa186e126229bf56347d7a53"
+        },
+        "poll": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "811b4d4045e71d3fd9c58ae78d02b88e"
+        },
+        "leaf": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0
+        },
+        "avatar": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0
+        },
         "testroot/nested/leaf": {
           "enabled": true,
           "aliases": [],
@@ -96,6 +104,97 @@
           "aliases": [],
           "cooldown": 0,
           "fingerprint": "ff1ac132b3d8aa3a9d2ca3c6c9810284"
+        }
+      }
+    },
+    "admin": {
+      "enabled": true,
+      "commands": {
+        "add": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0
+        },
+        "list": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0
+        },
+        "remove": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0
+        },
+        "moderator/add": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "f99a6d41225928201d18866076981df7"
+        },
+        "moderator/list": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "65608feab9bc716b704f2142f2e4e5dd"
+        },
+        "moderator/remove": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "bd4f104b28136677a25fe39d5355d86d"
+        }
+      }
+    },
+    "developer": {
+      "enabled": true,
+      "commands": {
+        "testrouter": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "e84e29f577e398efa8c9f244ea5a260c"
+        },
+        "clickgame": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "6da0f8c6fd918494f71e53617eb1d432"
+        },
+        "colors": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "fec43dffd8c3c74c4ab4cf291d1ee34e"
+        },
+        "confirm": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "27b5e6708f95f7ea9ecc14eb692840ea"
+        },
+        "paginate": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "43bf7e0a4ff80279728635777a08f1b9"
+        },
+        "permissions": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "16385addde65ee0bc0492078689de66a"
+        },
+        "clonecontainer": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "eb38f9b219455560a069bb19ec98578a"
+        },
+        "testcontainer": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "27e39f08010a32e5e9ea04575c7847d7"
         }
       }
     }

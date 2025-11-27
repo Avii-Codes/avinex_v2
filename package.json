@@ -27,6 +27,7 @@
     "dotenv": "^17.0.0",
     "figlet": "^1.9.4",
     "gradient-string": "^3.0.0",
+    "ioredis": "^5.8.2",
     "mongoose": "^9.0.0",
     "winston": "^3.18.3"
   },

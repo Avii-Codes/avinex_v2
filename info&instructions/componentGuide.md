@@ -1,5 +1,26 @@
-# Component Helper Guide
+# 🚀 What is a Container?
+In Components V2, a Container acts as the main wrapper for all your components.
+Instead of the old UI system (embeds + attachments + components in fixed positions), the container allows you to freely layout items in any order you want.
 
+Think of it like a page builder where you stack components top-to-bottom.
+
+# Components you can place inside a Container
+
+- Text:Paragraph style text
+- Separator:Divider line
+- Media Gallery:Images / GIF gallery
+- Section:Group text + button accessory/Thumbnail
+- Attachment:Add files (Required to send as Attachment in reply if using uploaded images).
+- Action Row:Holds buttons or menus
+- Container:Message wrapper
+
+# Components you can place inside a Action Row
+
+- Button:Interactive buttons(5 max)
+- Link Button:Link buttons(1 max)
+- Select Menu:Dropdown menu(1 max)
+
+# Component Helper Guide
 The `Container` class in `src/lib/components.ts` simplifies creating Discord V2 components (Containers).
 
 ## Quick Start
@@ -59,6 +80,53 @@ container.addFooter('*Updated: now*', { divider: true });
 **addDivider(spacing?)** - Visible divider line (1 component)
 ```typescript
 container.addDivider('large');
+```
+
+### Dynamic Editing (New!)
+
+You can modify components after adding them. This is useful for stateful updates (e.g., disabling a button after clicking).
+
+**Methods:**
+- `container.items`: Get the list of components.
+- `container.updateText(index, newContent)`: Update a text block.
+- `container.updateButton(rowIndex, btnIndex, options)`: Update a button.
+- `container.removeComponent(index)`: Remove a component.
+
+**Example:**
+```typescript
+// 1. Create initial container
+const container = new Container()
+    .addText('Status: Active')      // Index 0
+    .addActionRow({                 // Index 1
+        buttons: [{ customId: 'stop', label: 'Stop', style: 'danger' }]
+    });
+
+// 2. Update it later (e.g., in a handler)
+container.updateText(0, 'Status: Stopped');
+container.updateButton(1, 0, { 
+    label: 'Stopped', 
+    disabled: true, 
+    style: 'secondary' 
+});
+
+await ctx.interaction.update({ components: [container] });
+```
+
+### Disabling Components (New!)
+
+You can quickly disable interactive elements (buttons, menus) using `.disable()`.
+
+**Usage:**
+```typescript
+// Disable EVERYTHING (Buttons, Menus, Accessories)
+container.disable();
+
+// Disable only specific types
+container.disable({ 
+    buttons: true,          // Action Row Buttons
+    selectMenus: true,      // Select Menus
+    buttonAccessories: false // Keep Section Buttons active
+});
 ```
 
 ---

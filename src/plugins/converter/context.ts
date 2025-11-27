@@ -10,7 +10,8 @@ import {
   AutocompleteInteraction,
   InteractionResponse
 } from 'discord.js';
-import { HybridContext } from './types';
+import { HybridContext, HybridCommand } from './types';
+import { StateManager } from '../router/state';
 
 export class Context implements HybridContext {
   public client: Client;
@@ -20,6 +21,8 @@ export class Context implements HybridContext {
   public channel: TextBasedChannel | null;
   public args: Record<string, any>;
   public raw: Message | ChatInputCommandInteraction | AutocompleteInteraction | null;
+  public command: HybridCommand;
+  public groupId: string;
   private response: Message | InteractionResponse | null = null;
 
   constructor(
@@ -29,7 +32,8 @@ export class Context implements HybridContext {
     guild: Guild | null,
     channel: TextBasedChannel | null,
     args: Record<string, any>,
-    raw: Message | ChatInputCommandInteraction | AutocompleteInteraction | null
+    raw: Message | ChatInputCommandInteraction | AutocompleteInteraction | null,
+    command: HybridCommand
   ) {
     this.client = client;
     this.user = user;
@@ -38,6 +42,55 @@ export class Context implements HybridContext {
     this.channel = channel;
     this.args = args;
     this.raw = raw;
+    this.command = command;
+    // Default: Generate a new group ID (for new commands)
+    this.groupId = `grp_${Math.random().toString(16).slice(2, 10)}`;
+  }
+
+  /**
+   * Create a component ID with optional state and TTL.
+   * Automatically tracks message groups for batch cleanup.
+   * 
+   * @param key - Handler key (e.g., 'click', 'confirm')
+   * @param data - State data to store
+   * @param ttl - Time to live in seconds (default: 60)
+   * @param messageGroupId - Optional group ID. Defaults to context's groupId.
+   */
+  public createId(key: string, data?: any, ttl: number = 60, messageGroupId?: string): string {
+    const token = Math.random().toString(16).slice(2, 10);
+
+    // Store data if provided
+    if (data !== undefined) {
+      // Use provided group ID or fall back to context's group ID
+      const groupId = messageGroupId || this.groupId;
+
+      // Inject metadata into state
+      const stateData = {
+        ...data,
+        _token: token,
+        _messageGroupId: groupId
+      };
+
+      StateManager.set(token, stateData, ttl);
+
+      // Store this token in the group
+      StateManager.addToGroup(groupId, token);
+    }
+
+    const id = `${this.command.name}:${key}:${token}`;
+
+    if (id.length > 100) {
+      throw new Error(`Custom ID length exceeded (${id.length}/100). Command '${this.command.name}' or Key '${key}' is too long.`);
+    }
+
+    return id;
+  }
+
+  /**
+   * Generate a unique group ID for linking components.
+   */
+  public generateGroupId(): string {
+    return `grp_${Math.random().toString(16).slice(2, 10)}`;
   }
 
   public async reply(content: string | { content?: string; embeds?: any[]; components?: any[]; ephemeral?: boolean; flags?: any }) {

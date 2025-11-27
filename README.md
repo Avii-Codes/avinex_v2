@@ -124,6 +124,60 @@ await ctx.reply({
 
 See [componentGuide.md](info&instructions/componentGuide.md) for complete documentation.
 
+## 🔀 Router Plugin (Component Handlers)
+
+Handle Discord buttons and select menus directly in your commands with automatic state management:
+
+```typescript
+const command: HybridCommand = {
+    name: 'poll',
+    description: 'Create a poll',
+    run: async (ctx) => {
+        // Create button with state (auto-expires in 300 seconds)
+        const voteId = ctx.createId('vote', { option: 'A' }, 300);
+        
+        const container = new Container()
+            .addText('Vote for option A!')
+            .addActionRow({
+                buttons: [{
+                    customId: voteId,
+                    label: 'Vote',
+                    style: 'primary'
+                }]
+            });
+
+        await ctx.reply({
+            components: [container],
+            flags: [MessageFlags.IsComponentsV2]
+        });
+    },
+
+    // Handler is co-located with command!
+    components: {
+        vote: async (ctx: ComponentContext) => {
+            const { option } = ctx.state; // Auto-hydrated!
+            await ctx.interaction.reply(`You voted for ${option}!`);
+        }
+    }
+};
+```
+
+**Features:**
+- **Co-located Handlers**: Define button/menu logic right with your command
+- **Hybrid State**: L1 (Memory) + L2 (Redis) for speed & persistence
+- **Auto-Cleanup**: State expires automatically (Garbage Collected)
+- **Safety**: Memory overflow protection & circular reference checks
+- **Global Handlers**: Share common handlers across all commands
+- **Permissions**: Granular access control (roles, users, permissions, cooldowns)
+
+**📖 Full Guide:** See [ROUTER_PLUGIN_GUIDE.md](info&instructions/ROUTER_PLUGIN_GUIDE.md) for comprehensive examples including:
+- Confirmation dialogs
+- Stateful counters
+- Paginated lists
+- Select menus
+- Permission controls
+- And much more!
+
 ## 🤖 Programmatic Command Execution
 
 You can execute commands programmatically from anywhere in your code. This is perfect for **AI agents** or **internal automation**.
@@ -284,6 +338,7 @@ npm install
 ## 📚 Additional Resources
 
 - **[FRAMEWORK_DOCS.md](FRAMEWORK_DOCS.md)** - Deep dive into internals
+- **[ROUTER_PLUGIN_GUIDE.md](info&instructions/ROUTER_PLUGIN_GUIDE.md)** - Complete guide to component handlers
 - **[SYSTEM_DOCS.md](SYSTEM_DOCS.md)** - Main Bot System Architecture & Modules
 - **[Discord.js Guide](https://discordjs.guide/)** - Learn Discord.js basics
 - **[Sapphire Framework Docs](https://www.sapphirejs.dev/)** - Official Sapphire documentation

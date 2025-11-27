@@ -12,7 +12,7 @@ const command: HybridCommand = {
 
         // In a real bot, you would do: ctx.guild.members.ban(user, { reason });
 
-        await ctx.reply({
+        await ctx.follow({
             content: `🔨 **Banned** ${user}!\nReason: ${reason || 'No reason provided'}`
         });
     }

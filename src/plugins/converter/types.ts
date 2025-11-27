@@ -8,7 +8,9 @@ import {
   TextBasedChannel,
   AutocompleteInteraction,
   APIInteractionGuildMember,
-  PermissionResolvable
+  PermissionResolvable,
+  ButtonInteraction,
+  StringSelectMenuInteraction
 } from 'discord.js';
 
 export type CommandType = 'slash' | 'prefix' | 'both';
@@ -32,8 +34,32 @@ export interface HybridContext {
   reply(content: string | { content?: string; embeds?: any[]; components?: any[]; ephemeral?: boolean; flags?: any; files?: any[] }): Promise<any>;
   edit(content: string | { content?: string; embeds?: any[]; components?: any[]; flags?: any; files?: any[] }): Promise<any>;
   follow(content: string | { content?: string; embeds?: any[]; components?: any[]; ephemeral?: boolean; flags?: any; files?: any[] }): Promise<any>;
+
+  // Router Plugin Extensions
+  command: HybridCommand;
+  createId(key: string, data?: any, ttl?: number, messageGroupId?: string): string;
+  generateGroupId(): string;
 }
 
+export interface ComponentContext extends HybridContext {
+  interaction: ButtonInteraction | StringSelectMenuInteraction | any;
+  state: any; // Hydrated from cache
+  componentArgs: string[]; // Raw args
+  groupId?: string; // Synced from state
+}
+
+export interface ComponentConfig {
+  run: (ctx: ComponentContext) => Promise<void>;
+  global?: boolean;
+  permissions?: PermissionResolvable[];
+  roles?: string[]; // Role IDs
+  users?: string[]; // User IDs
+  ownerOnly?: boolean;
+  cooldown?: number;
+}
+
+// Type for component handlers - can be either a function or a config object
+export type ComponentHandler = ((ctx: ComponentContext) => Promise<void>) | ComponentConfig;
 
 export type PermissionLevel = 'User' | 'Admin' | 'ServerOwner' | 'Developer';
 
@@ -49,6 +75,10 @@ export interface HybridCommand {
 
   run(ctx: HybridContext): Promise<void>;
   auto?(ctx: HybridContext): Promise<void>; // For autocomplete
+
+  // Router Plugin Extensions
+  components?: Record<string, ComponentHandler>;
+  idPrefix?: string; // Internal use by Router
 }
 
 export interface SubCommandGroup {

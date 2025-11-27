@@ -7,7 +7,9 @@ const GuildSchema: Schema = new Schema({
     settings: {
         moderation: {
             automod: { type: Boolean, default: false },
-            logChannelId: { type: String }
+            logChannelId: { type: String },
+            moderatorRoles: [{ type: String }],
+            moderatorUsers: [{ type: String }]
         },
         xp: {
             enabled: { type: Boolean, default: true },

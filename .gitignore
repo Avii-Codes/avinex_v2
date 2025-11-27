@@ -18,28 +18,16 @@ yarn-debug.log*
 pnpm-debug.log*
 
 # ───── EDITOR / SYSTEM ─────
-.DS_Store
-.idea/
-.vscode/
-Thumbs.db
+
 
 # ───── TYPESCRIPT ─────
 *.tsbuildinfo
 
 # ───── COVERAGE & TEMP ─────
-coverage/
-temp/
-tmp/
 
 # ───── DATABASE / LOCAL DATA ─────
 
-
-*.sqlite
-*.db
-
 # ───── LOCAL EXECUTABLES ─────
-*.exe
-*.dll
 
 # ───── IGNORED DOCS / INTERNAL ─────
 verification_report.txt

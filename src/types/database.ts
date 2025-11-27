@@ -5,6 +5,8 @@ export interface IGuild {
         moderation: {
             automod: boolean;
             logChannelId?: string;
+            moderatorRoles?: string[];
+            moderatorUsers?: string[];
         };
         xp: {
             enabled: boolean;

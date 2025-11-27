@@ -130,6 +130,148 @@ export class Container extends ContainerBuilder {
     }
 
     /**
+     * Get a copy of the current components list.
+     */
+    public get items(): any[] {
+        // @ts-ignore - Accessing protected property
+        return [...(this.components || [])];
+    }
+
+    /**
+     * Replace a component at a specific index.
+     * @param index The index of the component to replace.
+     * @param component The new component builder.
+     * @returns The container instance for chaining.
+     */
+    public editComponent(index: number, component: any): this {
+        // @ts-ignore
+        if (!this.components || index < 0 || index >= this.components.length) {
+            throw new Error(`Invalid component index: ${index}`);
+        }
+        // @ts-ignore
+        this.components[index] = component;
+        return this;
+    }
+
+    /**
+     * Remove a component at a specific index.
+     * @param index The index of the component to remove.
+     * @returns The container instance for chaining.
+     */
+    public removeComponent(index: number): this {
+        // @ts-ignore
+        if (!this.components || index < 0 || index >= this.components.length) {
+            throw new Error(`Invalid component index: ${index}`);
+        }
+        // @ts-ignore
+        this.components.splice(index, 1);
+        this.componentCount--;
+        return this;
+    }
+
+    /**
+     * Disable interactive components in the container.
+     * @param options Specify which components to disable. If omitted, disables all.
+     * @returns The container instance for chaining.
+     */
+    public disable(options?: { buttonAccessories?: boolean; buttons?: boolean; selectMenus?: boolean }): this {
+        const disableAll = !options;
+        const disableBtnAcc = disableAll || options?.buttonAccessories;
+        const disableBtns = disableAll || options?.buttons;
+        const disableMenus = disableAll || options?.selectMenus;
+
+        // @ts-ignore
+        for (const component of (this.components || [])) {
+            // Handle Action Rows
+            if (component instanceof ActionRowBuilder) {
+                // @ts-ignore
+                for (const item of component.components) {
+                    if (item instanceof ButtonBuilder && disableBtns) {
+                        item.setDisabled(true);
+                    } else if (
+                        (item instanceof StringSelectMenuBuilder ||
+                            item instanceof UserSelectMenuBuilder ||
+                            item instanceof RoleSelectMenuBuilder ||
+                            item instanceof MentionableSelectMenuBuilder ||
+                            item instanceof ChannelSelectMenuBuilder) && disableMenus
+                    ) {
+                        item.setDisabled(true);
+                    }
+                }
+            }
+            // Handle Sections (Button Accessories)
+            else if (component instanceof SectionBuilder && disableBtnAcc) {
+                // Try to access the accessory builder
+                // @ts-ignore
+                const accessory = component.accessory;
+                if (accessory instanceof ButtonBuilder) {
+                    accessory.setDisabled(true);
+                }
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Update the content of a TextDisplay component.
+     * @param index The index of the text component.
+     * @param content The new content string.
+     * @returns The container instance for chaining.
+     */
+    public updateText(index: number, content: string): this {
+        // @ts-ignore
+        const component = this.components?.[index];
+        if (!(component instanceof TextDisplayBuilder)) {
+            throw new Error(`Component at index ${index} is not a TextDisplayBuilder.`);
+        }
+
+        if (content.length > 4000) {
+            throw new Error(`Text content exceeds maximum length! Maximum 4000 characters allowed.`);
+        }
+
+        component.setContent(content);
+        return this;
+    }
+
+    /**
+     * Update a button within an ActionRow.
+     * @param rowIndex The index of the ActionRow component.
+     * @param buttonIndex The index of the button within the row.
+     * @param options The properties to update.
+     * @returns The container instance for chaining.
+     */
+    public updateButton(rowIndex: number, buttonIndex: number, options: Partial<ButtonOptions>): this {
+        // @ts-ignore
+        const row = this.components?.[rowIndex];
+        if (!(row instanceof ActionRowBuilder)) {
+            throw new Error(`Component at index ${rowIndex} is not an ActionRowBuilder.`);
+        }
+
+        // @ts-ignore - Accessing components of the row
+        const button = row.components?.[buttonIndex];
+        if (!button || !(button instanceof ButtonBuilder)) {
+            throw new Error(`Button at index ${buttonIndex} not found in row ${rowIndex}.`);
+        }
+
+        if (options.label !== undefined) button.setLabel(options.label);
+        if (options.emoji !== undefined) button.setEmoji(options.emoji);
+        if (options.disabled !== undefined) button.setDisabled(options.disabled);
+
+        if (options.url) {
+            button.setURL(options.url);
+            button.setStyle(ButtonStyle.Link);
+        } else {
+            if (options.customId) button.setCustomId(options.customId);
+            if (options.style) {
+                const style = getButtonStyle(options.style);
+                if (style) button.setStyle(style);
+            }
+        }
+
+        return this;
+    }
+
+    /**
      * Validates that adding a component won't exceed the 50-component limit.
      * @throws Error if limit would be exceeded
      */
@@ -498,6 +640,26 @@ export class Container extends ContainerBuilder {
             this.componentCount++;
         }
         return this;
+    }
+    /**
+     * Creates a shallow copy of the container.
+     * @returns A new Container instance with the same components and files.
+     */
+    public clone(): Container {
+        const clone = new Container();
+
+        // Copy properties
+        clone.files = [...this.files];
+        clone['componentCount'] = this.componentCount;
+
+        // Copy components from parent ContainerBuilder
+        // @ts-ignore - Accessing protected/private property
+        if (this.components) {
+            // @ts-ignore
+            clone.components = [...this.components];
+        }
+
+        return clone;
     }
 }
 

@@ -1,0 +1,26 @@
+# Task: Implement Router Plugin
+
+- [ ] **Design & Planning**
+    - [x] Analyze existing codebase <!-- id: 0 -->
+    - [x] Create implementation plan <!-- id: 1 -->
+    - [ ] Refine plan based on user feedback (Global Handlers) <!-- id: 2 -->
+- [/] **Implementation**
+    - [x] Create `src/plugins/router` directory <!-- id: 3 -->
+    - [x] Implement `src/plugins/router/registry.ts` (Dynamic Lookup Strategy) <!-- id: 4 -->
+    - [x] Implement `src/plugins/router/state.ts` (State Manager - In Memory) <!-- id: 15 -->
+    - [x] Implement `src/plugins/router/index.ts` (Lazy Registration + Dispatcher) <!-- id: 5 -->
+    - [x] Implement Permission Checks (Owner, Roles, Users, Permissions) <!-- id: 13 -->
+    - [x] Implement Cooldown Checks <!-- id: 16 -->
+    - [x] Implement Error Handling (Duplicate IDs, Missing Handlers, Safe Execution) <!-- id: 10 -->
+    - [x] Implement Dev Mode Logging <!-- id: 11 -->
+    - [x] Implement ID Length Verification (100 char limit) <!-- id: 12 -->
+    - [x] Update `src/plugins/converter/types.ts` (Add ComponentContext, ComponentConfig) <!-- id: 6 -->
+    - [x] Update `src/plugins/converter/context.ts` (Add createId method) <!-- id: 7 -->
+    - [x] Implement Automatic State Cleanup (Message Groups) <!-- id: 17 -->
+    - [x] Register Plugin in `ExtendedClient.ts` <!-- id: 8 -->
+    - [x] Create `src/handlers/global.ts` (Global Handler Registration) <!-- id: 9 -->
+- [x] **Verification**
+    - [x] Create test command `src/commands/utility/routertest.ts` <!-- id: 9 -->
+    - [x] Verify local handlers <!-- id: 10 -->
+    - [x] Verify subcommands <!-- id: 11 -->
+    - [x] Verify global handlers <!-- id: 12 -->

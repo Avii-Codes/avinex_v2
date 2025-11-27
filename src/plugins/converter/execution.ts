@@ -15,6 +15,8 @@ import { parseGrammar } from './grammar';
 import { lexCommand } from './lexer';
 import { log } from '../../utils/logger';
 import { HybridCommand, HybridContext } from './types';
+import { GuildModel } from '../../database/models/Guild';
+import { UserModel } from '../../database/models/User';
 
 // Cooldown Map: commandName -> Map<userId, timestamp>
 const cooldowns = new Map<string, Map<string, number>>();
@@ -90,6 +92,7 @@ export async function executeHybridCommand(
                         // Found /root group sub
                         cmd = group.subcommands.get(potentialSub);
                         subCommandName = potentialSub;
+                        groupName = potentialSubOrGroup;
                         rawArgs = tokens.slice(3);
                     }
                 }
@@ -259,15 +262,45 @@ export async function executeHybridCommand(
                     }
                 });
             }
-        }, 250);
+        }, 2000);
     }
 
     // 9. Execution
     try {
-        let commandFullName = subCommandName ? `${cmd.name} ${subCommandName}` : cmd.name;
+        let commandFullName = cmd.name;
+        if (subCommandName) {
+            if (groupName) {
+                commandFullName = `${commandName} ${groupName} ${subCommandName}`;
+            } else {
+                commandFullName = `${commandName} ${subCommandName}`;
+            }
+        }
         if (usedAlias) {
             commandFullName += ` (alias: ${usedAlias})`;
         }
+
+        // Ensure guild data exists if in a guild
+        if (ctx.guild) {
+            try {
+                await GuildModel.findOneAndUpdate(
+                    { guildId: ctx.guild.id },
+                    { guildId: ctx.guild.id },
+                    { upsert: true, new: true, setDefaultsOnInsert: true }
+                );
+
+                // Ensure user data exists
+                if (ctx.user) {
+                    await UserModel.findOneAndUpdate(
+                        { userId: ctx.user.id, guildId: ctx.guild.id },
+                        { userId: ctx.user.id, guildId: ctx.guild.id },
+                        { upsert: true, new: true, setDefaultsOnInsert: true }
+                    );
+                }
+            } catch (dbError) {
+                log.error(`Failed to ensure data for ${ctx.guild.name}`, dbError);
+            }
+        }
+
         log.command(commandFullName, ctx.user.tag, args);
         await cmd.run(ctx);
     } catch (err) {
@@ -298,7 +331,8 @@ function createContext(trigger: any, args: any, cmd: HybridCommand): HybridConte
             trigger.guild,
             trigger.channel,
             args,
-            trigger
+            trigger,
+            cmd
         );
     } else if (trigger instanceof ChatInputCommandInteraction || trigger instanceof AutocompleteInteraction) {
         return new Context(
@@ -308,7 +342,8 @@ function createContext(trigger: any, args: any, cmd: HybridCommand): HybridConte
             trigger.guild,
             trigger.channel,
             args,
-            trigger
+            trigger,
+            cmd
         );
     } else {
         // Virtual Context
@@ -319,7 +354,8 @@ function createContext(trigger: any, args: any, cmd: HybridCommand): HybridConte
             trigger.guild || null,
             trigger.channel || null,
             args,
-            null
+            null,
+            cmd
         );
     }
 }
