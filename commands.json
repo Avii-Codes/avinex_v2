@@ -195,6 +195,24 @@
           "aliases": [],
           "cooldown": 0,
           "fingerprint": "27e39f08010a32e5e9ea04575c7847d7"
+        },
+        "testautodisable": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "1f146eb12de92cec18856177b46d4750"
+        },
+        "testdisable": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 0,
+          "fingerprint": "742a547cbd88064495008b2cb80a9212"
+        },
+        "example": {
+          "enabled": true,
+          "aliases": [],
+          "cooldown": 5,
+          "fingerprint": "3f0d48a32749b54ff651a945ad53e2f2"
         }
       }
     }

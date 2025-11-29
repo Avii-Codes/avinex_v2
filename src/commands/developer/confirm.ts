@@ -26,11 +26,16 @@ const command: HybridCommand = {
                 ]
             });
 
-        await ctx.reply({
+        const message = await ctx.reply({
             components: [container],
             flags: [MessageFlags.IsComponentsV2],
             ephemeral: true
         });
+
+        if (message) {
+            await ctx.registerAutoDisable(message, container, 30);
+        }
+
     },
 
     components: {

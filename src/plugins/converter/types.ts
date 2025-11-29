@@ -39,6 +39,7 @@ export interface HybridContext {
   command: HybridCommand;
   createId(key: string, data?: any, ttl?: number, messageGroupId?: string): string;
   generateGroupId(): string;
+  registerAutoDisable(message: any, container: any, ttl?: number): void;
 }
 
 export interface ComponentContext extends HybridContext {

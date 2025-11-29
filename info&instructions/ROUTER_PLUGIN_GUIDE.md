@@ -504,6 +504,47 @@ async function updatePage(ctx: ComponentContext, items: string[], page: number, 
 
 ---
 
+## Auto-Disable System
+
+The Router Plugin includes a built-in system to automatically disable interactive components (buttons, select menus) after a set time (TTL). This prevents users from clicking buttons that have expired state, improving the user experience.
+
+### How It Works
+
+1.  **Registration**: You call `ctx.registerAutoDisable(message, container, ttl)`.
+2.  **Timer**: The `StateManager` sets a timer for the specified TTL (e.g., 60 seconds).
+3.  **Execution**: When the timer expires:
+    *   It calls `container.disable()` to visually gray out all components.
+    *   It attempts to edit the message on Discord to reflect the disabled state.
+    *   **Error Handling**: It gracefully ignores errors if the message was deleted or if an ephemeral interaction expired.
+
+### Usage
+
+#### 1. In a Standard Command
+
+```typescript
+const msg = await ctx.reply({ components: [container] });
+// Auto-disable in 60 seconds
+if (msg) ctx.registerAutoDisable(msg, container, 60);
+```
+
+#### 2. In a Global Handler (Static Method)
+
+For global handlers or external events where you don't have a `ctx` instance, use the static method:
+
+```typescript
+import { Context } from '../../plugins/converter/context';
+
+// ... inside your global handler ...
+Context.registerAutoDisable(message, container, 60);
+```
+
+### Features
+- **Debounce Logic**: Prevents button flickering and double-clicks.
+- **Race Condition Protection**: Ensures only one active timer exists per message.
+- **Jitter**: Adds a small random delay to prevent "Thundering Herd" issues when many messages expire at once.
+
+---
+
 ## Advanced Features
 
 ### Granular Permissions

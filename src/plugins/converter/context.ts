@@ -8,7 +8,10 @@ import {
   TextBasedChannel,
   APIInteractionGuildMember,
   AutocompleteInteraction,
-  InteractionResponse
+  InteractionResponse,
+  ButtonInteraction,
+  StringSelectMenuInteraction,
+  MessageFlags
 } from 'discord.js';
 import { HybridContext, HybridCommand } from './types';
 import { StateManager } from '../router/state';
@@ -162,5 +165,72 @@ export class Context implements HybridContext {
     } else if (this.raw instanceof Message) {
       return this.raw.reply(payload);
     }
+  }
+
+
+  /**
+   * Register a message for auto-disabling components before TTL expires.
+   * Static version for use outside of command context (e.g., global events).
+   * 
+   * @param message The message or interaction response to monitor
+   * @param container The container to disable
+   * @param ttl Time to live in seconds (default: 60)
+   * @param interaction Optional interaction to use for editing (if available)
+   */
+  public static async registerAutoDisable(message: Message | InteractionResponse, container: any, ttl: number = 60, interaction?: ChatInputCommandInteraction | ButtonInteraction | StringSelectMenuInteraction | any) {
+    let targetMessage = message;
+
+    // If it's an InteractionResponse, fetch the actual message to get the stable ID
+    if (message instanceof InteractionResponse) {
+      try {
+        targetMessage = await message.fetch();
+      } catch (error) {
+        console.warn('[AutoDisable] Failed to fetch message from InteractionResponse, using original ID (might cause timer duplication):', error);
+      }
+    }
+
+    StateManager.monitorMessage(targetMessage.id, async () => {
+      try {
+        // Disable all components
+        container.disable();
+
+        // Try to edit the message
+        if (targetMessage instanceof Message) {
+          await targetMessage.edit({
+            components: [container],
+            flags: [MessageFlags.IsComponentsV2]
+          });
+        } else {
+          // Fallback for InteractionResponse if fetch failed but we still have the object
+          // Check if the raw context is an interaction that can edit replies
+          if (interaction && 'editReply' in interaction) {
+            await (interaction as any).editReply({
+              components: [container],
+              flags: [MessageFlags.IsComponentsV2]
+            });
+          } else if (message.edit) { // Use original message object's edit if available
+            // Fallback if message has edit method (some InteractionResponses do)
+            // @ts-ignore
+            await message.edit({
+              components: [container],
+              flags: [MessageFlags.IsComponentsV2]
+            });
+          }
+        }
+      } catch (error: any) {
+        // Ignore common "gone" errors
+        if (error.code === 10008) return; // Unknown Message (Deleted)
+        if (error.code === 10062) return; // Unknown Interaction (Expired Ephemeral)
+
+        console.error('[AutoDisable] Failed to disable components:', error);
+      }
+    }, ttl);
+  }
+
+  /**
+   * Instance wrapper for registerAutoDisable
+   */
+  public async registerAutoDisable(message: Message | InteractionResponse, container: any, ttl: number = 60) {
+    await Context.registerAutoDisable(message, container, ttl, this.raw);
   }
 }

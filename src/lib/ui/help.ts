@@ -9,20 +9,17 @@ import {
     formatCommandName
 } from '../helpUtils';
 import { registry } from '../../plugins/converter/registry';
-import type { Client } from 'discord.js';
+import { HybridContext } from '../../plugins/converter/types';
 
 /**
  * Create the main help container showing all categories
  */
-/**
- * Create the main help container showing all categories
- */
-export function createMainHelpContainer(client: Client): Container {
+export function createMainHelpContainer(ctx: HybridContext): Container {
     const container = new Container()
         .addHeader(`${General.help} **Help Center**`, { divider: true });
     // Bot info section
     container.addText([
-        `> **🤖 Bot Name:** \`${client.user?.username}\``,
+        `> **🤖 Bot Name:** \`${ctx.client.user?.username}\``,
         `> **📊 Total Commands:** \`${getTotalCommandCount()}\``,
         `> **⌨️ Prefix:** \`${process.env.PREFIX || '!'}\``,
     ].join('\n'));
@@ -54,7 +51,7 @@ export function createMainHelpContainer(client: Client): Container {
     container.addActionRow({
         menu: {
             type: 'string',
-            customId: 'help:cat',
+            customId: ctx.createId('cat'),
             placeholder: '✨ Select a category to explore...',
             options: categoryOptions,
         }
@@ -68,7 +65,7 @@ export function createMainHelpContainer(client: Client): Container {
 /**
  * Create a category view container showing commands in a specific category
  */
-export function createCategoryContainer(category: string): Container {
+export function createCategoryContainer(ctx: HybridContext, category: string): Container {
     const commands = getCommandsByCategory(category);
 
     // Build category view container
@@ -101,7 +98,7 @@ export function createCategoryContainer(category: string): Container {
         container.addActionRow({
             menu: {
                 type: 'string',
-                customId: `help:cmd:${category}`,
+                customId: ctx.createId('cmd', { category }),
                 placeholder: '🔍 Select a command for details...',
                 options: commandOptions,
             }
@@ -113,7 +110,7 @@ export function createCategoryContainer(category: string): Container {
         buttons: [
             {
                 label: 'Home',
-                customId: 'help:back:main',
+                customId: ctx.createId('home'),
                 emoji: '🏠',
                 style: 'secondary'
             }
@@ -126,7 +123,7 @@ export function createCategoryContainer(category: string): Container {
 /**
  * Create a command detail container showing information about a specific command
  */
-export function createCommandDetailContainer(commandName: string, category: string): Container {
+export function createCommandDetailContainer(ctx: HybridContext, commandName: string, category: string): Container {
     const command = registry.getCommandByPath(commandName);
 
     if (!command) {
@@ -134,6 +131,17 @@ export function createCommandDetailContainer(commandName: string, category: stri
         const container = new Container()
             .addHeader(`${Status.error} **Command Not Found**`, { divider: true });
         container.addText('❌ The requested command could not be found.');
+
+        container.addActionRow({
+            buttons: [
+                {
+                    label: 'Back',
+                    customId: ctx.createId('back', { category }),
+                    emoji: '◀️',
+                    style: 'secondary'
+                }
+            ]
+        });
         return container;
     }
 
@@ -181,13 +189,13 @@ export function createCommandDetailContainer(commandName: string, category: stri
         buttons: [
             {
                 label: 'Back',
-                customId: `help:back:cat:${category}`,
+                customId: ctx.createId('back', { category }),
                 emoji: '◀️',
                 style: 'secondary'
             },
             {
                 label: 'Home',
-                customId: 'help:back:main',
+                customId: ctx.createId('home'),
                 emoji: '🏠',
                 style: 'secondary'
             }

@@ -7,6 +7,7 @@ const MAX_ENTRIES = 10000;
 class StateManagerImpl {
     private memoryState = new Map<string, any>();
     private memoryGroups = new Map<string, Set<string>>();
+    private timers = new Map<string, NodeJS.Timeout>();
     private redis: Redis | null = null;
 
     constructor() {
@@ -203,6 +204,34 @@ class StateManagerImpl {
             if (DEV_MODE) console.error('[Redis] Operation Failed:', error.message);
             return null;
         }
+    }
+    /**
+     * Monitor a message for auto-disable
+     * @param id Message ID (or unique key)
+     * @param callback Function to execute on timeout
+     * @param ttl Time to live in seconds
+     */
+    public monitorMessage(id: string, callback: () => Promise<void>, ttl: number) {
+        // 1. Race Condition Fix: Clear existing timer for this message
+        if (this.timers.has(id)) {
+            clearTimeout(this.timers.get(id)!);
+            if (DEV_MODE) console.log(`[Router State] Cleared existing timer for ${id}`);
+        }
+
+        // 2. Jitter: Add 0-2s random delay to prevent Thundering Herd
+        const jitter = Math.floor(Math.random() * 2000);
+        const delay = (ttl * 1000) - 5000 + jitter;
+
+        if (delay <= 0) return; // TTL too short, skip auto-disable
+
+        // 3. Set Timer
+        const timer = setTimeout(async () => {
+            this.timers.delete(id);
+            if (DEV_MODE) console.log(`[Router State] Auto-disabling message ${id}`);
+            await callback();
+        }, delay);
+
+        this.timers.set(id, timer);
     }
 }
 
