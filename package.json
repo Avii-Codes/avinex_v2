@@ -18,6 +18,7 @@
     "verify": "ts-node src/scripts/verify-framework.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@sapphire/framework": "^5.4.0",
     "@sapphire/pieces": "^4.3.1",
     "@sapphire/utilities": "^3.17.0",

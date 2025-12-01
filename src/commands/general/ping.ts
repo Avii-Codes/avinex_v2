@@ -11,7 +11,7 @@ const command: HybridCommand = {
         await ctx.reply({ content: 'Pinging...' });
 
         // 2. Calculate stats
-        const responseTime = Date.now() - ctx.raw!.createdTimestamp;
+        const responseTime = ctx.raw ? Date.now() - ctx.raw.createdTimestamp : 0;
         const apiLatency = Math.round(ctx.client.ws.ping);
         const uptime = formatUptime(ctx.client.uptime || 0);
         const memoryUsage = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);

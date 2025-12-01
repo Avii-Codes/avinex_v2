@@ -1,0 +1,2 @@
+src/events/aiChat.ts(38,35): error TS2339: Property 'sendTyping' does not exist on type 'DMChannel | PartialDMChannel | PartialGroupDMChannel | NewsChannel | StageChannel | TextChannel | PublicThreadChannel<...> | PrivateThreadChannel | VoiceChannel'.
+  Property 'sendTyping' does not exist on type 'PartialGroupDMChannel'.

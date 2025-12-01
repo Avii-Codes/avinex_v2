@@ -132,9 +132,11 @@ Handle Discord buttons and select menus directly in your commands with automatic
 const command: HybridCommand = {
     name: 'poll',
     description: 'Create a poll',
+    type: 'both',
+    level: 'Admin',
     run: async (ctx) => {
         // Create button with state (auto-expires in 300 seconds)
-        const voteId = ctx.createId('vote', { option: 'A' }, 300);
+        const voteId = ctx.createId('vote', { option: 'A' }, 300);// here we have 3 parameters vote is the name of the handler, { option: 'A' } is the state(any data you went to pass to the handler it is not linked to button name so no worries about reaching 100character limit) and 300 is the time in seconds
         
         const container = new Container()
             .addText('Vote for option A!')
@@ -146,19 +148,21 @@ const command: HybridCommand = {
                 }]
             });
 
-        await ctx.reply({
+        const message = await ctx.reply({
             components: [container],
             flags: [MessageFlags.IsComponentsV2]
         });
+
+        ctx.registerAutoDisable(message, container, 300);//auto disable the message componentsafter 300 seconds
     },
 
     // Handler is co-located with command!
     components: {
         vote: async (ctx: ComponentContext) => {
-            const { option } = ctx.state; // Auto-hydrated!
+            const { option } = ctx.state; // Auto-hydrated!(it will automatically get the state)
             await ctx.interaction.reply(`You voted for ${option}!`);
         }
-    }
+    } 
 };
 ```
 

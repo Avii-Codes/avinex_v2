@@ -2,7 +2,7 @@ import { HybridCommand } from '../../plugins/converter/types';
 import { MessageFlags, AutocompleteInteraction } from 'discord.js';
 import { Container } from '../../lib/components';
 
-const example: HybridCommand = {
+const command: HybridCommand = {
     name: 'example',
     description: 'A glimpse of the Avinex Hybrid Framework power',
     type: 'both',
@@ -101,4 +101,4 @@ const example: HybridCommand = {
     }
 };
 
-export default example;
+export default command;

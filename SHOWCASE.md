@@ -70,13 +70,13 @@ click: async (ctx) => {
 Add dynamic autocomplete to your commands with a simple handler.
 
 ```typescript
-args: '<fruit:auto>',
+args: '<fruit:auto>',//:auto for autocomplete
 auto: async (ctx) => {
     // Filter options as user types
     const focused = ctx.raw.options.getFocused();
     const fruits = ['Apple', 'Banana', 'Cherry'];
     await ctx.raw.respond(
-        fruits.filter(f => f.startsWith(focused)).map(f => ({ name: f, value: f }))
+        fruits.filter(f => f.startsWith(focused)).map(f => ({ name: f, value: f }))//<--- Auto autocomplete
     );
 }
 ```

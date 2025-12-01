@@ -5,10 +5,12 @@ import { db } from '../database';
 import { log, animateBanner } from '../utils/logger';
 import { readdirSync, statSync } from 'fs';
 import { join } from 'path';
+import { BaseService } from '../services/BaseService';
 import { BaseSystem } from '../systems/BaseSystem';
 
 export class ExtendedClient extends SapphireClient {
     public systems: Map<string, BaseSystem> = new Map();
+    public services: Map<string, BaseService> = new Map();
 
     constructor() {
         super({
@@ -43,6 +45,9 @@ export class ExtendedClient extends SapphireClient {
             const { registerRouterPlugin } = require('../plugins/router');
             registerRouterPlugin(this);
 
+            // 3. Load Services
+            await this.loadServices();
+
             // 4. Load Systems
             await this.loadSystems();
 
@@ -55,6 +60,44 @@ export class ExtendedClient extends SapphireClient {
         } catch (error) {
             log.error('Failed to initialize bot:', error);
             process.exit(1);
+        }
+    }
+
+    private async loadServices() {
+        const servicesPath = join(__dirname, '../services');
+
+        try {
+            // Check if directory exists
+            try {
+                statSync(servicesPath);
+            } catch {
+                log.verbose('Services directory not found, skipping service loading.');
+                return;
+            }
+
+            const items = readdirSync(servicesPath);
+
+            for (const item of items) {
+                const itemPath = join(servicesPath, item);
+                if (statSync(itemPath).isFile() && (item.endsWith('.ts') || item.endsWith('.js'))) {
+                    // Skip BaseService
+                    if (item.startsWith('BaseService')) continue;
+
+                    try {
+                        const ServiceClass = require(itemPath).default;
+                        if (ServiceClass && ServiceClass.prototype instanceof BaseService) {
+                            const service = new ServiceClass();
+                            this.services.set(service.name, service);
+                            // Call logLoaded via protected method access (or just log here)
+                            log.success(`Loaded service: ${service.name}`);
+                        }
+                    } catch (error) {
+                        log.error(`Failed to load service ${item}:`, error);
+                    }
+                }
+            }
+        } catch (error) {
+            log.error('Failed to load services:', error);
         }
     }
 
